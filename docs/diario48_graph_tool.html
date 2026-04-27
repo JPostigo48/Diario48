@@ -1,0 +1,637 @@
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Sora:wght@300;400;600&display=swap');
+
+  .gt-root {
+    font-family: 'Sora', sans-serif;
+    background: #090a0d;
+    color: #dde1ea;
+    width: 100%;
+    min-height: 620px;
+    display: flex;
+    flex-direction: column;
+    border-radius: 12px;
+    border: 0.5px solid #1a1d28;
+    overflow: hidden;
+  }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+
+  /* HEADER */
+  .gt-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 20px;
+    border-bottom: 0.5px solid #1a1d28;
+    background: #0a0b0e;
+    gap: 12px;
+  }
+  .gt-header-left { display: flex; align-items: center; gap: 12px; }
+  .gt-breadcrumb {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #374151;
+  }
+  .gt-breadcrumb span { color: #4f8ef7; }
+  .gt-algo-selector {
+    display: flex; gap: 4px;
+  }
+  .algo-btn {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    padding: 4px 10px; border-radius: 4px; cursor: pointer;
+    background: transparent; border: 0.5px solid #1a1d28; color: #4b5563;
+    transition: all 0.15s; letter-spacing: 0.3px;
+  }
+  .algo-btn.active { background: #4f8ef718; border-color: #4f8ef755; color: #4f8ef7; }
+  .algo-btn:hover:not(.active) { border-color: #2a3040; color: #9ca3af; }
+  .algo-btn.disabled-algo { opacity: 0.35; cursor: not-allowed; }
+  .gt-header-right { display: flex; gap: 8px; align-items: center; }
+  .gt-btn-sm {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    padding: 5px 12px; border-radius: 4px; cursor: pointer; border: 0.5px solid #1a1d28;
+    color: #6b7280; background: transparent; transition: all 0.15s;
+  }
+  .gt-btn-sm:hover { border-color: #2a3040; color: #9ca3af; }
+  .gt-btn-sm.danger:hover { border-color: #ef444455; color: #ef4444; }
+
+  /* MAIN LAYOUT */
+  .gt-main {
+    display: grid;
+    grid-template-columns: 200px 1fr 210px;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* LEFT PANEL */
+  .gt-left {
+    border-right: 0.5px solid #1a1d28;
+    padding: 14px 14px;
+    display: flex; flex-direction: column; gap: 12px;
+    background: #0a0b0e;
+    overflow-y: auto;
+  }
+  .panel-section-title {
+    font-family: 'JetBrains Mono', monospace; font-size: 8px;
+    letter-spacing: 1.5px; color: #2a3040; text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .gt-input-group { display: flex; flex-direction: column; gap: 5px; }
+  .gt-label { font-size: 10px; color: #4b5563; font-family: 'JetBrains Mono', monospace; }
+  .gt-input {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    background: #111318; border: 0.5px solid #1a1d28; color: #dde1ea;
+    padding: 6px 8px; border-radius: 4px; outline: none; width: 100%;
+    transition: border-color 0.15s;
+  }
+  .gt-input:focus { border-color: #4f8ef755; }
+  .gt-select {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    background: #111318; border: 0.5px solid #1a1d28; color: #dde1ea;
+    padding: 6px 8px; border-radius: 4px; outline: none; width: 100%;
+  }
+  .gt-row { display: flex; gap: 6px; }
+  .gt-row .gt-input { width: 0; flex: 1; }
+  .add-btn {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700;
+    background: #4f8ef718; border: 0.5px solid #4f8ef755; color: #4f8ef7;
+    padding: 5px 10px; border-radius: 4px; cursor: pointer; white-space: nowrap;
+    transition: background 0.15s;
+  }
+  .add-btn:hover { background: #4f8ef730; }
+  .divider { border: none; border-top: 0.5px solid #1a1d28; margin: 0; }
+  .gt-action-btn {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    padding: 7px 10px; border-radius: 4px; cursor: pointer; width: 100%;
+    border: 0.5px solid #1a1d28; background: transparent; color: #6b7280;
+    transition: all 0.15s; text-align: left;
+  }
+  .gt-action-btn:hover { border-color: #2a3040; color: #9ca3af; }
+  .gt-action-btn.load { border-color: #22c55e33; color: #22c55e88; }
+  .gt-action-btn.load:hover { background: #22c55e10; color: #22c55e; }
+  .gt-action-btn.clear { border-color: #ef444433; color: #ef444488; }
+  .gt-action-btn.clear:hover { background: #ef444410; color: #ef4444; }
+
+  /* CENTER - CANVAS */
+  .gt-center {
+    display: flex; flex-direction: column;
+    background: #090a0d;
+    position: relative;
+  }
+  .gt-canvas-area {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+  }
+  #cy-mock {
+    width: 100%; height: 100%;
+    position: relative;
+  }
+  .canvas-placeholder {
+    width: 100%; height: 100%;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    position: relative;
+  }
+  .canvas-grid {
+    position: absolute; inset: 0;
+    background-image: 
+      linear-gradient(#1a1d2820 1px, transparent 1px),
+      linear-gradient(90deg, #1a1d2820 1px, transparent 1px);
+    background-size: 28px 28px;
+  }
+  .canvas-content { position: relative; z-index: 1; width: 100%; height: 100%; }
+  .graph-svg { width: 100%; height: 100%; }
+
+  /* CONTROLS BAR */
+  .gt-controls {
+    border-top: 0.5px solid #1a1d28;
+    padding: 10px 16px;
+    display: flex; align-items: center; gap: 8px;
+    background: #0a0b0e;
+  }
+  .ctrl-btn {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    padding: 6px 14px; border-radius: 4px; cursor: pointer;
+    border: 0.5px solid #1a1d28; background: transparent; color: #6b7280;
+    transition: all 0.15s; display: flex; align-items: center; gap: 5px;
+  }
+  .ctrl-btn:hover { border-color: #2a3040; color: #9ca3af; }
+  .ctrl-btn.run {
+    background: #4f8ef720; border-color: #4f8ef755; color: #4f8ef7; font-weight: 700;
+  }
+  .ctrl-btn.run:hover { background: #4f8ef733; }
+  .ctrl-btn.run.playing { background: #ef444420; border-color: #ef444455; color: #ef4444; }
+  .ctrl-sep { width: 0.5px; height: 16px; background: #1a1d28; margin: 0 4px; }
+  .step-counter {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #2a3040;
+    margin-left: auto;
+  }
+  .step-counter span { color: #4f8ef7; }
+
+  /* RIGHT PANEL */
+  .gt-right {
+    border-left: 0.5px solid #1a1d28;
+    padding: 14px 14px;
+    display: flex; flex-direction: column; gap: 10px;
+    background: #0a0b0e;
+    overflow-y: auto;
+  }
+  .info-card {
+    background: #111318; border: 0.5px solid #1a1d28;
+    border-radius: 6px; padding: 10px 12px;
+  }
+  .info-card-title {
+    font-family: 'JetBrains Mono', monospace; font-size: 8px;
+    letter-spacing: 1.5px; color: #2a3040; text-transform: uppercase; margin-bottom: 6px;
+  }
+  .info-val {
+    font-family: 'JetBrains Mono', monospace; font-size: 14px; color: #dde1ea; font-weight: 500;
+  }
+  .info-val.accent { color: #4f8ef7; }
+  .info-val.red { color: #ef4444; }
+  .node-list {
+    display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px;
+  }
+  .node-pill {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    padding: 2px 8px; border-radius: 3px;
+    background: #22c55e18; border: 0.5px solid #22c55e44; color: #22c55e;
+  }
+  .node-pill.frontier {
+    background: #f59e0b18; border-color: #f59e0b44; color: #f59e0b;
+  }
+  .node-pill.current {
+    background: #ef444418; border-color: #ef444444; color: #ef4444;
+  }
+  .action-desc {
+    font-size: 11px; color: #6b7280; line-height: 1.6;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .fn-table { width: 100%; border-collapse: collapse; }
+  .fn-table th {
+    font-family: 'JetBrains Mono', monospace; font-size: 9px;
+    color: #2a3040; text-align: center; padding: 3px 4px;
+    border-bottom: 0.5px solid #1a1d28;
+  }
+  .fn-table td {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    color: #6b7280; text-align: center; padding: 3px 4px;
+    border-bottom: 0.5px solid #1a1d2850;
+  }
+  .fn-table tr.active-row td { color: #4f8ef7; }
+  .fn-table td.node-col { color: #dde1ea; text-align: left; }
+</style>
+
+<div class="gt-root">
+
+  <!-- HEADER -->
+  <div class="gt-header">
+    <div class="gt-header-left">
+      <div class="gt-breadcrumb">diario48 / <span>visualizador de grafos</span></div>
+      <div class="gt-algo-selector">
+        <button class="algo-btn active" id="btn-bfs">BFS</button>
+        <button class="algo-btn disabled-algo">DFS</button>
+        <button class="algo-btn disabled-algo">A*</button>
+        <button class="algo-btn disabled-algo">Greedy</button>
+        <button class="algo-btn disabled-algo">Coloreo</button>
+      </div>
+    </div>
+    <div class="gt-header-right">
+      <button class="gt-btn-sm" id="loadBtn">cargar ejemplo</button>
+      <button class="gt-btn-sm danger" id="clearBtn">limpiar</button>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="gt-main">
+
+    <!-- LEFT PANEL -->
+    <div class="gt-left">
+      <div>
+        <div class="panel-section-title">// nodo</div>
+        <div class="gt-row">
+          <input class="gt-input" id="nodeId" placeholder="ID" style="max-width:52px"/>
+          <input class="gt-input" id="nodeLabel" placeholder="etiqueta"/>
+          <button class="add-btn" id="addNodeBtn">+</button>
+        </div>
+      </div>
+      <hr class="divider"/>
+      <div>
+        <div class="panel-section-title">// arista</div>
+        <div class="gt-row">
+          <input class="gt-input" id="edgeSrc" placeholder="src"/>
+          <input class="gt-input" id="edgeDst" placeholder="dst"/>
+        </div>
+        <div class="gt-row" style="margin-top:5px">
+          <input class="gt-input" id="edgeW" placeholder="peso" style="max-width:60px"/>
+          <button class="add-btn" id="addEdgeBtn">+</button>
+        </div>
+      </div>
+      <hr class="divider"/>
+      <div>
+        <div class="panel-section-title">// configuración</div>
+        <div class="gt-input-group">
+          <div class="gt-label">nodo inicial</div>
+          <select class="gt-select" id="startNode">
+            <option value="A">A</option>
+            <option value="B">B</option>
+            <option value="C">C</option>
+            <option value="D">D</option>
+            <option value="E">E</option>
+            <option value="F">F</option>
+            <option value="G">G</option>
+            <option value="H">H</option>
+          </select>
+        </div>
+        <div class="gt-input-group" style="margin-top:6px">
+          <div class="gt-label">nodo objetivo</div>
+          <select class="gt-select" id="goalNode">
+            <option value="H">H</option>
+            <option value="G">G</option>
+            <option value="F">F</option>
+            <option value="E">E</option>
+            <option value="D">D</option>
+            <option value="C">C</option>
+            <option value="B">B</option>
+          </select>
+        </div>
+        <div class="gt-input-group" style="margin-top:6px">
+          <div class="gt-label">heurística h(n) — A*</div>
+          <input class="gt-input" placeholder="ej: A=5, B=3" style="font-size:9px"/>
+        </div>
+      </div>
+      <hr class="divider"/>
+      <div style="display:flex; flex-direction:column; gap:6px">
+        <button class="gt-action-btn load" id="loadExample">↓ cargar grafo de ejemplo</button>
+        <button class="gt-action-btn clear" id="clearGraph">⌫ limpiar grafo</button>
+      </div>
+    </div>
+
+    <!-- CENTER CANVAS -->
+    <div class="gt-center">
+      <div class="gt-canvas-area">
+        <div class="canvas-placeholder" id="cy-mock">
+          <div class="canvas-grid"></div>
+          <div class="canvas-content">
+            <svg class="graph-svg" viewBox="0 0 560 380" xmlns="http://www.w3.org/2000/svg" id="graphSvg">
+              <!-- edges rendered by JS -->
+              <g id="edges-group"></g>
+              <!-- nodes rendered by JS -->
+              <g id="nodes-group"></g>
+              <!-- cytoscape.js hint -->
+              <text x="280" y="200" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#1e2333" id="emptyHint">
+                cytoscape.js — canvas listo para integrar
+              </text>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- SIMULATION CONTROLS -->
+      <div class="gt-controls">
+        <button class="ctrl-btn run" id="playBtn">▶ ejecutar</button>
+        <div class="ctrl-sep"></div>
+        <button class="ctrl-btn" id="prevBtn">← anterior</button>
+        <button class="ctrl-btn" id="nextBtn">siguiente →</button>
+        <div class="ctrl-sep"></div>
+        <button class="ctrl-btn" id="resetBtn">↺ reiniciar</button>
+        <button class="ctrl-btn" id="autoBtn">⟳ auto-play</button>
+        <div class="step-counter">paso <span id="stepNum">0</span> / <span id="stepTotal">0</span></div>
+      </div>
+    </div>
+
+    <!-- RIGHT PANEL -->
+    <div class="gt-right">
+      <div class="info-card">
+        <div class="info-card-title">// paso actual</div>
+        <div class="info-val accent" id="stepLabel">—</div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">// nodo procesando</div>
+        <div class="info-val red" id="currentNode">—</div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">// visitados</div>
+        <div class="node-list" id="visitedList"></div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">// cola / frontera</div>
+        <div class="node-list" id="frontierList"></div>
+      </div>
+      <div class="info-card" style="flex:1">
+        <div class="info-card-title">// acción actual</div>
+        <div class="action-desc" id="actionDesc">Carga un ejemplo y presiona ejecutar para iniciar la simulación BFS paso a paso.</div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">// tabla de costos (A*)</div>
+        <table class="fn-table" id="costTable">
+          <thead>
+            <tr><th>nodo</th><th>g(n)</th><th>h(n)</th><th>f(n)</th></tr>
+          </thead>
+          <tbody id="costBody">
+            <tr><td class="node-col" colspan="4" style="color:#2a3040;font-size:9px">— disponible en modo A* —</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const NODE_COLORS = {
+  unvisited: { fill: '#1e2333', stroke: '#2a3040', text: '#4b5563' },
+  current:   { fill: '#ef444420', stroke: '#ef4444', text: '#ef4444' },
+  visited:   { fill: '#22c55e20', stroke: '#22c55e', text: '#22c55e' },
+  frontier:  { fill: '#f59e0b20', stroke: '#f59e0b', text: '#f59e0b' },
+  goal:      { fill: '#7c3aed20', stroke: '#a78bfa', text: '#a78bfa' },
+  path:      { fill: '#8b5cf620', stroke: '#8b5cf6', text: '#8b5cf6' },
+  start:     { fill: '#4f8ef720', stroke: '#4f8ef7', text: '#4f8ef7' },
+};
+
+const MOCK_GRAPH = {
+  nodes: [
+    {id:'A', x:80,  y:80},
+    {id:'B', x:220, y:55},
+    {id:'C', x:370, y:80},
+    {id:'D', x:80,  y:195},
+    {id:'E', x:220, y:185},
+    {id:'F', x:370, y:195},
+    {id:'G', x:145, y:305},
+    {id:'H', x:440, y:300},
+  ],
+  edges: [
+    {src:'A',dst:'B'},{src:'A',dst:'D'},
+    {src:'B',dst:'C'},{src:'B',dst:'E'},
+    {src:'C',dst:'F'},
+    {src:'D',dst:'E'},{src:'D',dst:'G'},
+    {src:'E',dst:'F'},{src:'E',dst:'G'},
+    {src:'F',dst:'H'},
+    {src:'G',dst:'H'},
+  ]
+};
+
+function bfsSteps(graph, startId, goalId) {
+  const steps = [];
+  const visited = new Set();
+  const queue = [startId];
+  const nodeStates = {};
+  graph.nodes.forEach(n => nodeStates[n.id] = 'unvisited');
+  nodeStates[startId] = 'frontier';
+
+  steps.push({
+    label: 'inicio · BFS',
+    current: null,
+    visited: [],
+    frontier: [startId],
+    desc: `Inicializando BFS desde nodo ${startId}. Cola: [${startId}]`,
+    states: {...nodeStates}
+  });
+
+  const parent = {[startId]: null};
+
+  while (queue.length > 0) {
+    const node = queue.shift();
+    if (visited.has(node)) continue;
+    visited.add(node);
+    nodeStates[node] = node === goalId ? 'goal' : (node === startId ? 'visited' : 'current');
+
+    const currentFrontier = [...queue];
+    steps.push({
+      label: `procesando · ${node}`,
+      current: node,
+      visited: [...visited],
+      frontier: [...currentFrontier],
+      desc: `Desencolando nodo ${node}. Marcando como visitado. Explorando vecinos.`,
+      states: {...nodeStates}
+    });
+
+    if (node === goalId) {
+      const path = [];
+      let cur = goalId;
+      while (cur !== null) { path.unshift(cur); cur = parent[cur]; }
+      const pathStates = {...nodeStates};
+      path.forEach(n => { pathStates[n] = 'path'; });
+      steps.push({
+        label: `¡objetivo encontrado! · ${goalId}`,
+        current: goalId,
+        visited: [...visited],
+        frontier: [],
+        desc: `Camino encontrado: ${path.join(' → ')}. Longitud: ${path.length - 1} aristas.`,
+        states: pathStates,
+        path
+      });
+      break;
+    }
+
+    const neighbors = graph.edges
+      .filter(e => e.src === node || e.dst === node)
+      .map(e => e.src === node ? e.dst : e.src)
+      .filter(n => !visited.has(n));
+
+    neighbors.forEach(nb => {
+      if (!queue.includes(nb)) {
+        queue.push(nb);
+        parent[nb] = node;
+        nodeStates[nb] = 'frontier';
+      }
+    });
+
+    if (neighbors.length > 0) {
+      steps.push({
+        label: `expandiendo vecinos de ${node}`,
+        current: node,
+        visited: [...visited],
+        frontier: [...queue],
+        desc: `Vecinos no visitados de ${node}: [${neighbors.join(', ')}]. Añadidos a la cola.`,
+        states: {...nodeStates}
+      });
+    }
+  }
+  return steps;
+}
+
+let graphData = null;
+let bfsStepsList = [];
+let currentStep = -1;
+let autoInterval = null;
+
+function renderGraph(states) {
+  if (!graphData) return;
+  const edgesG = document.getElementById('edges-group');
+  const nodesG = document.getElementById('nodes-group');
+  const hint = document.getElementById('emptyHint');
+  if (hint) hint.style.display = 'none';
+  edgesG.innerHTML = '';
+  nodesG.innerHTML = '';
+
+  graphData.edges.forEach(e => {
+    const src = graphData.nodes.find(n => n.id === e.src);
+    const dst = graphData.nodes.find(n => n.id === e.dst);
+    if (!src || !dst) return;
+    const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+    line.setAttribute('x1', src.x); line.setAttribute('y1', src.y);
+    line.setAttribute('x2', dst.x); line.setAttribute('y2', dst.y);
+    line.setAttribute('stroke', '#1e2333'); line.setAttribute('stroke-width','1.5');
+    edgesG.appendChild(line);
+  });
+
+  graphData.nodes.forEach(n => {
+    const state = (states && states[n.id]) ? states[n.id] : 'unvisited';
+    const col = NODE_COLORS[state] || NODE_COLORS.unvisited;
+    const g = document.createElementNS('http://www.w3.org/2000/svg','g');
+    const circle = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    circle.setAttribute('cx', n.x); circle.setAttribute('cy', n.y);
+    circle.setAttribute('r','18'); circle.setAttribute('fill', col.fill);
+    circle.setAttribute('stroke', col.stroke); circle.setAttribute('stroke-width','1.8');
+    const text = document.createElementNS('http://www.w3.org/2000/svg','text');
+    text.setAttribute('x', n.x); text.setAttribute('y', n.y + 5);
+    text.setAttribute('text-anchor','middle');
+    text.setAttribute('font-family','JetBrains Mono');
+    text.setAttribute('font-size','12'); text.setAttribute('font-weight','700');
+    text.setAttribute('fill', col.text);
+    text.textContent = n.id;
+    g.appendChild(circle); g.appendChild(text);
+    nodesG.appendChild(g);
+  });
+}
+
+function updateRightPanel(step) {
+  if (!step) return;
+  document.getElementById('stepLabel').textContent = step.label;
+  document.getElementById('currentNode').textContent = step.current || '—';
+  document.getElementById('actionDesc').textContent = step.desc;
+  
+  const vl = document.getElementById('visitedList');
+  vl.innerHTML = step.visited.map(n => `<span class="node-pill">${n}</span>`).join('');
+  
+  const fl = document.getElementById('frontierList');
+  fl.innerHTML = step.frontier.map(n => `<span class="node-pill frontier">${n}</span>`).join('');
+  
+  document.getElementById('stepNum').textContent = currentStep + 1;
+  document.getElementById('stepTotal').textContent = bfsStepsList.length;
+}
+
+function goToStep(idx) {
+  if (idx < 0 || idx >= bfsStepsList.length) return;
+  currentStep = idx;
+  const step = bfsStepsList[idx];
+  renderGraph(step.states);
+  updateRightPanel(step);
+}
+
+document.getElementById('loadExample').addEventListener('click', loadExample);
+document.getElementById('loadBtn').addEventListener('click', loadExample);
+
+function loadExample() {
+  graphData = MOCK_GRAPH;
+  const startId = document.getElementById('startNode').value || 'A';
+  const goalId  = document.getElementById('goalNode').value  || 'H';
+  bfsStepsList = bfsSteps(graphData, startId, goalId);
+  currentStep = -1;
+  document.getElementById('stepNum').textContent = '0';
+  document.getElementById('stepTotal').textContent = bfsStepsList.length;
+  document.getElementById('actionDesc').textContent = 'Grafo de ejemplo cargado. Presiona ▶ ejecutar o → siguiente para avanzar paso a paso.';
+  renderGraph(null);
+  document.getElementById('visitedList').innerHTML = '';
+  document.getElementById('frontierList').innerHTML = '';
+  document.getElementById('currentNode').textContent = '—';
+  document.getElementById('stepLabel').textContent = 'listo';
+}
+
+document.getElementById('clearGraph').addEventListener('click', clearGraph);
+document.getElementById('clearBtn').addEventListener('click', clearGraph);
+
+function clearGraph() {
+  graphData = null; bfsStepsList = []; currentStep = -1;
+  clearInterval(autoInterval);
+  document.getElementById('edges-group').innerHTML = '';
+  document.getElementById('nodes-group').innerHTML = '';
+  const hint = document.getElementById('emptyHint');
+  if (hint) hint.style.display = '';
+  document.getElementById('stepLabel').textContent = '—';
+  document.getElementById('currentNode').textContent = '—';
+  document.getElementById('visitedList').innerHTML = '';
+  document.getElementById('frontierList').innerHTML = '';
+  document.getElementById('stepNum').textContent = '0';
+  document.getElementById('stepTotal').textContent = '0';
+  document.getElementById('actionDesc').textContent = 'Carga un ejemplo y presiona ejecutar para iniciar la simulación BFS paso a paso.';
+}
+
+document.getElementById('nextBtn').addEventListener('click', () => {
+  if (bfsStepsList.length === 0) loadExample();
+  goToStep(currentStep + 1);
+});
+document.getElementById('prevBtn').addEventListener('click', () => goToStep(currentStep - 1));
+document.getElementById('resetBtn').addEventListener('click', () => {
+  clearInterval(autoInterval);
+  document.getElementById('playBtn').classList.remove('playing');
+  document.getElementById('playBtn').textContent = '▶ ejecutar';
+  goToStep(0);
+});
+
+document.getElementById('playBtn').addEventListener('click', () => {
+  if (bfsStepsList.length === 0) loadExample();
+  if (currentStep < 0) goToStep(0);
+  else goToStep(currentStep + 1);
+});
+
+document.getElementById('autoBtn').addEventListener('click', () => {
+  if (autoInterval) {
+    clearInterval(autoInterval);
+    autoInterval = null;
+    document.getElementById('autoBtn').textContent = '⟳ auto-play';
+    return;
+  }
+  if (bfsStepsList.length === 0) loadExample();
+  if (currentStep < 0) goToStep(0);
+  document.getElementById('autoBtn').textContent = '⏸ detener';
+  autoInterval = setInterval(() => {
+    if (currentStep >= bfsStepsList.length - 1) {
+      clearInterval(autoInterval);
+      autoInterval = null;
+      document.getElementById('autoBtn').textContent = '⟳ auto-play';
+      return;
+    }
+    goToStep(currentStep + 1);
+  }, 900);
+});
+
+loadExample();
+goToStep(0);
+</script>

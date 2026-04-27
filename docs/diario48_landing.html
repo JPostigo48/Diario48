@@ -1,0 +1,305 @@
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Sora:wght@300;400;600;700&display=swap');
+
+  .d48-root {
+    font-family: 'Sora', sans-serif;
+    background: #0a0b0e;
+    color: #e8eaf0;
+    width: 100%;
+    min-height: 540px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border-radius: 12px;
+    border: 0.5px solid #1e2130;
+  }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+
+  .d48-nav {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 28px;
+    border-bottom: 0.5px solid #1e2130;
+    background: #0a0b0e;
+  }
+  .d48-logo {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 15px; font-weight: 700; letter-spacing: -0.5px;
+    color: #e8eaf0;
+  }
+  .d48-logo span { color: #4f8ef7; }
+  .d48-nav-links { display: flex; gap: 24px; }
+  .d48-nav-links a {
+    font-size: 12px; color: #6b7280; text-decoration: none;
+    font-family: 'JetBrains Mono', monospace; letter-spacing: 0.5px;
+    transition: color 0.2s;
+  }
+  .d48-nav-links a:hover { color: #e8eaf0; }
+  .d48-nav-right { display: flex; gap: 8px; }
+  .d48-badge {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    padding: 3px 9px; border-radius: 20px; letter-spacing: 0.5px;
+    border: 0.5px solid #4f8ef744; color: #4f8ef7; background: #4f8ef710;
+  }
+
+  .d48-main {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 0;
+    flex: 1;
+  }
+
+  .d48-left {
+    padding: 36px 40px 28px 40px;
+    display: flex; flex-direction: column; justify-content: space-between;
+    border-right: 0.5px solid #1e2130;
+  }
+  .d48-eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; letter-spacing: 2px; color: #4f8ef7;
+    text-transform: uppercase; margin-bottom: 12px;
+  }
+  .d48-title {
+    font-size: 52px; font-weight: 700; line-height: 1.0;
+    letter-spacing: -2px; color: #f1f3f9; margin-bottom: 16px;
+  }
+  .d48-title .accent { color: #4f8ef7; }
+  .d48-subtitle {
+    font-size: 13px; color: #6b7280; line-height: 1.7;
+    max-width: 420px; margin-bottom: 28px; font-weight: 300;
+  }
+  .d48-ctas { display: flex; gap: 10px; margin-bottom: 32px; }
+  .btn-primary {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    padding: 9px 18px; border-radius: 6px; cursor: pointer;
+    background: #4f8ef7; color: #0a0b0e; border: none;
+    font-weight: 700; letter-spacing: 0.5px; transition: opacity 0.15s;
+  }
+  .btn-primary:hover { opacity: 0.88; }
+  .btn-secondary {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    padding: 9px 18px; border-radius: 6px; cursor: pointer;
+    background: transparent; color: #9ca3af;
+    border: 0.5px solid #2a2f3e; letter-spacing: 0.5px; transition: all 0.15s;
+  }
+  .btn-secondary:hover { border-color: #4f8ef755; color: #e8eaf0; }
+
+  .d48-cards { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
+  .d48-card {
+    background: #111318; border: 0.5px solid #1e2130;
+    border-radius: 8px; padding: 14px 14px 12px;
+    cursor: pointer; transition: border-color 0.2s, background 0.2s;
+    position: relative; overflow: hidden;
+  }
+  .d48-card:hover { border-color: #4f8ef744; background: #13151e; }
+  .d48-card-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    margin-bottom: 10px;
+  }
+  .dot-blue { background: #4f8ef7; box-shadow: 0 0 6px #4f8ef766; }
+  .dot-green { background: #22c55e; box-shadow: 0 0 6px #22c55e66; }
+  .dot-amber { background: #f59e0b; box-shadow: 0 0 6px #f59e0b66; }
+  .d48-card-title { font-size: 12px; font-weight: 600; margin-bottom: 4px; color: #dde1ea; }
+  .d48-card-desc { font-size: 11px; color: #4b5563; line-height: 1.5; font-family: 'JetBrains Mono', monospace; }
+  .d48-card-tag {
+    position: absolute; top: 10px; right: 10px;
+    font-family: 'JetBrains Mono', monospace; font-size: 9px;
+    color: #374151; letter-spacing: 0.5px;
+  }
+
+  .d48-right {
+    padding: 24px;
+    display: flex; flex-direction: column;
+    background: #0c0d11;
+    position: relative; overflow: hidden;
+  }
+  .d48-right-label {
+    font-family: 'JetBrains Mono', monospace; font-size: 9px;
+    color: #2a3040; letter-spacing: 1.5px; text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+
+  .graph-preview {
+    flex: 1; position: relative;
+  }
+  .gp-svg { width: 100%; height: 260px; }
+
+  .d48-stats {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
+    margin-top: 12px;
+  }
+  .d48-stat {
+    background: #111318; border: 0.5px solid #1e2130;
+    border-radius: 6px; padding: 10px 12px;
+  }
+  .d48-stat-n {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 18px; font-weight: 700; color: #4f8ef7;
+  }
+  .d48-stat-l {
+    font-size: 10px; color: #4b5563; margin-top: 2px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .d48-footer {
+    padding: 10px 28px;
+    border-top: 0.5px solid #1e2130;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .d48-footer-txt {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; color: #2a3040; letter-spacing: 0.5px;
+  }
+  .d48-status {
+    display: flex; align-items: center; gap: 6px;
+    font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #22c55e;
+  }
+  .pulse-dot {
+    width: 5px; height: 5px; border-radius: 50%;
+    background: #22c55e; animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%,100%{ opacity:1; } 50%{ opacity:0.3; }
+  }
+</style>
+
+<div class="d48-root">
+
+  <nav class="d48-nav">
+    <div class="d48-logo">Diario<span>48</span></div>
+    <div class="d48-nav-links">
+      <a href="#">herramientas</a>
+      <a href="#">proyectos</a>
+      <a href="#">laboratorio</a>
+      <a href="#">sobre mí</a>
+    </div>
+    <div class="d48-nav-right">
+      <span class="d48-badge">v0.1 — alpha</span>
+    </div>
+  </nav>
+
+  <div class="d48-main">
+    <div class="d48-left">
+      <div>
+        <div class="d48-eyebrow">— plataforma personal</div>
+        <h1 class="d48-title">Diario<span class="accent">48</span></h1>
+        <p class="d48-subtitle">
+          Plataforma personal de herramientas, proyectos y experimentos de computación. Algoritmos visualizados, estructuras exploradas, ideas documentadas.
+        </p>
+        <div class="d48-ctas">
+          <button class="btn-primary" onclick="sendPrompt('Muéstrame la vista de la herramienta de grafos de Diario48')">explorar herramientas ↗</button>
+          <button class="btn-secondary">ver proyectos</button>
+        </div>
+      </div>
+
+      <div>
+        <div style="font-family:'JetBrains Mono',monospace; font-size:9px; color:#2a3040; letter-spacing:1.5px; text-transform:uppercase; margin-bottom:10px;">// módulos disponibles</div>
+        <div class="d48-cards">
+          <div class="d48-card">
+            <div class="d48-card-dot dot-blue"></div>
+            <div class="d48-card-title">Visualizador de grafos</div>
+            <div class="d48-card-desc">BFS · DFS · A* · Greedy</div>
+            <div class="d48-card-tag">activo</div>
+          </div>
+          <div class="d48-card">
+            <div class="d48-card-dot dot-green"></div>
+            <div class="d48-card-title">Proyectos universitarios</div>
+            <div class="d48-card-desc">CC · IS · BD · SO</div>
+            <div class="d48-card-tag">pronto</div>
+          </div>
+          <div class="d48-card">
+            <div class="d48-card-dot dot-amber"></div>
+            <div class="d48-card-title">Laboratorio personal</div>
+            <div class="d48-card-desc">experimentos · ideas</div>
+            <div class="d48-card-tag">pronto</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="d48-right">
+      <div class="d48-right-label">// preview — graph visualizer</div>
+      <div class="graph-preview">
+        <svg class="gp-svg" viewBox="0 0 340 250" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <marker id="arr" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L6,3 z" fill="#2a3040"/>
+            </marker>
+          </defs>
+
+          <line x1="85" y1="60" x2="170" y2="45" stroke="#1e2333" stroke-width="1.2" marker-end="url(#arr)"/>
+          <line x1="85" y1="60" x2="80" y2="140" stroke="#1e2333" stroke-width="1.2" marker-end="url(#arr)"/>
+          <line x1="170" y1="45" x2="255" y2="70" stroke="#1e2333" stroke-width="1.2" marker-end="url(#arr)"/>
+          <line x1="170" y1="45" x2="165" y2="135" stroke="#1e2333" stroke-width="1.2" marker-end="url(#arr)"/>
+          <line x1="80" y1="140" x2="165" y2="135" stroke="#4f8ef755" stroke-width="1.5" marker-end="url(#arr)"/>
+          <line x1="165" y1="135" x2="255" y2="70" stroke="#1e2333" stroke-width="1.2" marker-end="url(#arr)"/>
+          <line x1="165" y1="135" x2="240" y2="190" stroke="#4f8ef755" stroke-width="1.5" marker-end="url(#arr)"/>
+          <line x1="255" y1="70" x2="240" y2="190" stroke="#1e2333" stroke-width="1.2" marker-end="url(#arr)"/>
+          <line x1="80" y1="140" x2="60" y2="210" stroke="#1e2333" stroke-width="1.2" marker-end="url(#arr)"/>
+          <line x1="240" y1="190" x2="290" y2="210" stroke="#1e2333" stroke-width="1.2" marker-end="url(#arr)"/>
+
+          <circle cx="85" cy="60" r="14" fill="#22c55e22" stroke="#22c55e" stroke-width="1.5"/>
+          <text x="85" y="65" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#22c55e" font-weight="700">A</text>
+
+          <circle cx="170" cy="45" r="14" fill="#22c55e22" stroke="#22c55e" stroke-width="1.5"/>
+          <text x="170" y="50" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#22c55e" font-weight="700">B</text>
+
+          <circle cx="255" cy="70" r="14" fill="#22c55e22" stroke="#22c55e" stroke-width="1.5"/>
+          <text x="255" y="75" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#22c55e" font-weight="700">C</text>
+
+          <circle cx="80" cy="140" r="14" fill="#22c55e22" stroke="#22c55e" stroke-width="1.5"/>
+          <text x="80" y="145" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#22c55e" font-weight="700">D</text>
+
+          <circle cx="165" cy="135" r="16" fill="#f59e0b22" stroke="#f59e0b" stroke-width="2"/>
+          <text x="165" y="140" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#f59e0b" font-weight="700">E</text>
+
+          <circle cx="240" cy="190" r="14" fill="#4f8ef722" stroke="#4f8ef7" stroke-width="1.5"/>
+          <text x="240" y="195" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#4f8ef7" font-weight="700">F</text>
+
+          <circle cx="60" cy="210" r="14" fill="#1e2333" stroke="#2a3040" stroke-width="1.5"/>
+          <text x="60" y="215" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#4b5563" font-weight="700">G</text>
+
+          <circle cx="290" cy="210" r="14" fill="#7c3aed22" stroke="#7c3aed" stroke-width="1.5"/>
+          <text x="290" y="215" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#a78bfa" font-weight="700">H</text>
+
+          <text x="10" y="230" font-family="JetBrains Mono" font-size="8" fill="#2a3040">visitado</text>
+          <circle cx="6" cy="226" r="4" fill="#22c55e33" stroke="#22c55e" stroke-width="1"/>
+          <text x="62" y="230" font-family="JetBrains Mono" font-size="8" fill="#2a3040">frontera</text>
+          <circle cx="58" cy="226" r="4" fill="#f59e0b33" stroke="#f59e0b" stroke-width="1"/>
+          <text x="114" y="230" font-family="JetBrains Mono" font-size="8" fill="#2a3040">objetivo</text>
+          <circle cx="110" cy="226" r="4" fill="#7c3aed33" stroke="#7c3aed" stroke-width="1"/>
+          <text x="165" y="230" font-family="JetBrains Mono" font-size="8" fill="#2a3040">sin visitar</text>
+          <circle cx="161" cy="226" r="4" fill="#1e2333" stroke="#2a3040" stroke-width="1"/>
+        </svg>
+      </div>
+
+      <div class="d48-stats">
+        <div class="d48-stat">
+          <div class="d48-stat-n">4</div>
+          <div class="d48-stat-l">algoritmos</div>
+        </div>
+        <div class="d48-stat">
+          <div class="d48-stat-n">8</div>
+          <div class="d48-stat-l">nodos · ejemplo</div>
+        </div>
+        <div class="d48-stat">
+          <div class="d48-stat-n" style="color:#22c55e">BFS</div>
+          <div class="d48-stat-l">disponible ahora</div>
+        </div>
+        <div class="d48-stat">
+          <div class="d48-stat-n" style="font-size:14px">paso a paso</div>
+          <div class="d48-stat-l">visualización</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="d48-footer">
+    <span class="d48-footer-txt">diario48 · plataforma personal · 2025</span>
+    <div class="d48-status">
+      <div class="pulse-dot"></div>
+      sistema activo
+    </div>
+  </div>
+
+</div>
