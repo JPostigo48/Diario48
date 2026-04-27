@@ -1,8 +1,11 @@
+import type { GraphTheme } from "@/lib/graph/theme";
+
 type StepControlsProps = {
   currentStepIndex: number;
   totalSteps: number;
   canRun: boolean;
   isAutoPlaying: boolean;
+  theme: GraphTheme;
   onRun: () => void;
   onPrevious: () => void;
   onNext: () => void;
@@ -15,25 +18,32 @@ function ControlButton({
   onClick,
   variant = "default",
   disabled = false,
+  theme,
 }: {
   children: React.ReactNode;
   onClick: () => void;
   variant?: "default" | "run";
   disabled?: boolean;
+  theme: GraphTheme;
 }) {
-  const baseClassName =
-    "flex items-center gap-1 rounded-[4px] border px-[14px] py-[6px] font-mono text-[10px] transition-all";
-  const variantClassName =
-    variant === "run"
-      ? "border-[#4f8ef755] bg-[#4f8ef720] font-bold text-[#4f8ef7] hover:bg-[#4f8ef733]"
-      : "border-[#1a1d28] bg-transparent text-[#6b7280] hover:border-[#2a3040] hover:text-[#9ca3af]";
-
   return (
     <button
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className={`${baseClassName} ${variantClassName} disabled:cursor-not-allowed disabled:opacity-40`}
+      className="flex items-center gap-1 rounded-[4px] border px-[14px] py-[6px] font-mono text-[10px] transition-all disabled:cursor-not-allowed disabled:opacity-40"
+      style={
+        variant === "run"
+          ? {
+              borderColor: `${theme.accent}55`,
+              backgroundColor: theme.accentSoft,
+              color: theme.accent,
+            }
+          : {
+              borderColor: theme.border,
+              color: theme.mutedText,
+            }
+      }
     >
       {children}
     </button>
@@ -45,6 +55,7 @@ export default function StepControls({
   totalSteps,
   canRun,
   isAutoPlaying,
+  theme,
   onRun,
   onPrevious,
   onNext,
@@ -52,38 +63,38 @@ export default function StepControls({
   onToggleAutoPlay,
 }: StepControlsProps) {
   return (
-    <div className="flex items-center gap-2 border-t border-[#1a1d28] bg-[#0a0b0e] px-4 py-2.5">
-      <ControlButton onClick={onRun} variant="run" disabled={!canRun}>
+    <div
+      className="flex items-center gap-2 border-t px-4 py-2.5"
+      style={{ borderColor: theme.border, backgroundColor: theme.panelBg }}
+    >
+      <ControlButton onClick={onRun} variant="run" disabled={!canRun} theme={theme}>
         ▶ ejecutar
       </ControlButton>
 
-      <div className="mx-1 h-4 w-px bg-[#1a1d28]" />
+      <div className="mx-1 h-4 w-px" style={{ backgroundColor: theme.border }} />
 
-      <ControlButton onClick={onPrevious} disabled={currentStepIndex <= 0}>
+      <ControlButton onClick={onPrevious} disabled={currentStepIndex <= 0} theme={theme}>
         ← anterior
       </ControlButton>
       <ControlButton
         onClick={onNext}
         disabled={!canRun || currentStepIndex >= totalSteps - 1}
+        theme={theme}
       >
         siguiente →
       </ControlButton>
 
-      <div className="mx-1 h-4 w-px bg-[#1a1d28]" />
+      <div className="mx-1 h-4 w-px" style={{ backgroundColor: theme.border }} />
 
-      <ControlButton onClick={onReset} disabled={!canRun}>
+      <ControlButton onClick={onReset} disabled={!canRun} theme={theme}>
         ↺ reiniciar
       </ControlButton>
-      <ControlButton onClick={onToggleAutoPlay} disabled={!canRun}>
+      <ControlButton onClick={onToggleAutoPlay} disabled={!canRun} theme={theme}>
         {isAutoPlaying ? "⏸ detener" : "⟳ auto-play"}
       </ControlButton>
 
-      <div className="ml-auto font-mono text-[10px] text-[#2a3040]">
-        paso{" "}
-        <span className="text-[#4f8ef7]">
-          {totalSteps === 0 ? 0 : currentStepIndex + 1}
-        </span>{" "}
-        / <span>{totalSteps}</span>
+      <div className="ml-auto font-mono text-[10px]" style={{ color: theme.dimText }}>
+        paso <span style={{ color: theme.accent }}>{totalSteps === 0 ? 0 : currentStepIndex + 1}</span> / <span>{totalSteps}</span>
       </div>
     </div>
   );

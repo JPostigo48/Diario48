@@ -1,22 +1,29 @@
+import type { GraphTheme } from "@/lib/graph/theme";
 import type { AlgorithmStep, AlgorithmType } from "@/lib/graph/types";
 
 type AlgorithmPanelProps = {
   algorithm: AlgorithmType;
   step: AlgorithmStep | null;
+  theme: GraphTheme;
 };
 
 function InfoCard({
   title,
+  theme,
   className = "",
   children,
 }: {
   title: string;
+  theme: GraphTheme;
   className?: string;
   children: React.ReactNode;
 }) {
   return (
-    <section className={`rounded-[6px] border border-[#1a1d28] bg-[#111318] p-3 ${className}`}>
-      <div className="mb-1.5 font-mono text-[8px] uppercase tracking-[1.5px] text-[#2a3040]">
+    <section
+      className={`rounded-[6px] border p-3 ${className}`}
+      style={{ borderColor: theme.border, backgroundColor: theme.panelSurface }}
+    >
+      <div className="mb-1.5 font-mono text-[8px] uppercase tracking-[1.5px]" style={{ color: theme.dimText }}>
         {title}
       </div>
       {children}
@@ -27,20 +34,32 @@ function InfoCard({
 function NodePill({
   nodeId,
   variant,
+  theme,
 }: {
   nodeId: string;
   variant: "visited" | "frontier" | "path";
+  theme: GraphTheme;
 }) {
   const styles = {
-    visited: "border-[#22c55e44] bg-[#22c55e18] text-[#22c55e]",
-    frontier: "border-[#f59e0b44] bg-[#f59e0b18] text-[#f59e0b]",
-    path: "border-[#8b5cf644] bg-[#8b5cf618] text-[#8b5cf6]",
+    visited: {
+      borderColor: `${theme.success}44`,
+      backgroundColor: theme.successSoft,
+      color: theme.success,
+    },
+    frontier: {
+      borderColor: `${theme.warning}44`,
+      backgroundColor: theme.warningSoft,
+      color: theme.warning,
+    },
+    path: {
+      borderColor: `${theme.path}44`,
+      backgroundColor: theme.pathSoft,
+      color: theme.path,
+    },
   };
 
   return (
-    <span
-      className={`rounded-[3px] border px-2 py-0.5 font-mono text-[10px] ${styles[variant]}`}
-    >
+    <span className="rounded-[3px] border px-2 py-0.5 font-mono text-[10px]" style={styles[variant]}>
       {nodeId}
     </span>
   );
@@ -49,72 +68,74 @@ function NodePill({
 export default function AlgorithmPanel({
   algorithm,
   step,
+  theme,
 }: AlgorithmPanelProps) {
   return (
-    <aside className="d48-scrollbar flex flex-col gap-2.5 overflow-y-auto bg-[#0a0b0e] p-3.5">
-      <InfoCard title="// paso actual">
-        <div className="font-mono text-[14px] font-medium text-[#4f8ef7]">
+    <aside className="d48-scrollbar flex flex-col gap-2.5 overflow-y-auto p-3.5" style={{ backgroundColor: theme.panelBg }}>
+      <InfoCard title="// paso actual" theme={theme}>
+        <div className="font-mono text-[14px] font-medium" style={{ color: theme.accent }}>
           {step?.actionLabel ?? "—"}
         </div>
       </InfoCard>
 
-      <InfoCard title="// nodo procesando">
-        <div className="font-mono text-[16px] font-medium text-[#ef4444]">
+      <InfoCard title="// nodo procesando" theme={theme}>
+        <div className="font-mono text-[16px] font-medium" style={{ color: theme.danger }}>
           {step?.currentNode ?? "—"}
         </div>
       </InfoCard>
 
-      <InfoCard title="// visitados">
+      <InfoCard title="// visitados" theme={theme}>
         <div className="flex flex-wrap gap-1">
           {step?.visited.length ? (
             step.visited.map((nodeId) => (
-              <NodePill key={nodeId} nodeId={nodeId} variant="visited" />
+              <NodePill key={nodeId} nodeId={nodeId} variant="visited" theme={theme} />
             ))
           ) : (
-            <span className="font-mono text-[10px] text-[#2a3040]">sin datos</span>
+            <span className="font-mono text-[10px]" style={{ color: theme.dimText }}>sin datos</span>
           )}
         </div>
       </InfoCard>
 
-      <InfoCard title="// cola / frontera">
+      <InfoCard title="// cola / frontera" theme={theme}>
         <div className="flex flex-wrap gap-1">
           {step?.frontier.length ? (
             step.frontier.map((nodeId) => (
-              <NodePill key={nodeId} nodeId={nodeId} variant="frontier" />
+              <NodePill key={nodeId} nodeId={nodeId} variant="frontier" theme={theme} />
             ))
           ) : (
-            <span className="font-mono text-[10px] text-[#2a3040]">vacía</span>
+            <span className="font-mono text-[10px]" style={{ color: theme.dimText }}>vacía</span>
           )}
         </div>
       </InfoCard>
 
-      <InfoCard title="// camino actual">
+      <InfoCard title="// camino actual" theme={theme}>
         <div className="flex flex-wrap gap-1">
           {step?.path.length ? (
             step.path.map((nodeId) => (
-              <NodePill key={nodeId} nodeId={nodeId} variant="path" />
+              <NodePill key={nodeId} nodeId={nodeId} variant="path" theme={theme} />
             ))
           ) : (
-            <span className="font-mono text-[10px] text-[#2a3040]">sin camino final</span>
+            <span className="font-mono text-[10px]" style={{ color: theme.dimText }}>sin camino final</span>
           )}
         </div>
       </InfoCard>
 
-      <InfoCard title="// acción actual" className="flex-1">
-        <p className="font-mono text-[11px] leading-[1.6] text-[#6b7280]">
+      <InfoCard title="// acción actual" theme={theme} className="flex-1">
+        <p className="font-mono text-[11px] leading-[1.6]" style={{ color: theme.mutedText }}>
           {step?.description ??
             "Carga un ejemplo y presiona ejecutar para iniciar la simulación paso a paso."}
         </p>
       </InfoCard>
 
-      <InfoCard title={`// tabla de costos (${algorithm === "astar" ? "A*" : "A*"})`}>
+      <InfoCard title={`// tabla de costos (${algorithm === "astar" ? "A*" : "A*"})`} theme={theme}>
         <table className="w-full border-collapse">
           <thead>
             <tr>
               {["nodo", "g(n)", "h(n)", "f(n)"].map((header) => (
                 <th
                   key={header}
-                  className="border-b border-[#1a1d28] py-1 text-center font-mono text-[9px] text-[#2a3040]"
+                  className="border-b py-1 text-center font-mono text-[9px]"
+                  style={{ borderColor: theme.border, color: theme.dimText }}
                 >
                   {header}
                 </th>
@@ -125,7 +146,8 @@ export default function AlgorithmPanel({
             <tr>
               <td
                 colSpan={4}
-                className="border-b border-[#1a1d2850] py-2 text-center font-mono text-[9px] text-[#2a3040]"
+                className="border-b py-2 text-center font-mono text-[9px]"
+                style={{ borderColor: `${theme.border}80`, color: theme.dimText }}
               >
                 — disponible cuando se implemente A* —
               </td>

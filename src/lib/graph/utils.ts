@@ -62,6 +62,51 @@ export function updateNodePosition(
   };
 }
 
+export function updateNodeDetails(
+  graph: GraphData,
+  nodeId: string,
+  updates: Partial<Pick<GraphNode, "label" | "heuristic">>,
+): GraphData {
+  return {
+    ...graph,
+    nodes: graph.nodes.map((node) =>
+      node.id === nodeId ? { ...node, ...updates } : node,
+    ),
+  };
+}
+
+export function updateEdgeDetails(
+  graph: GraphData,
+  edgeId: string,
+  updates: Partial<Pick<GraphEdge, "weight">>,
+): GraphData {
+  return {
+    ...graph,
+    edges: graph.edges.map((edge) =>
+      edge.id === edgeId ? { ...edge, ...updates } : edge,
+    ),
+  };
+}
+
+export function removeNode(graph: GraphData, nodeId: string): GraphData {
+  return {
+    ...graph,
+    nodes: graph.nodes.filter((node) => node.id !== nodeId),
+    edges: graph.edges.filter(
+      (edge) => edge.source !== nodeId && edge.target !== nodeId,
+    ),
+    startNode: graph.startNode === nodeId ? undefined : graph.startNode,
+    goalNode: graph.goalNode === nodeId ? undefined : graph.goalNode,
+  };
+}
+
+export function removeEdge(graph: GraphData, edgeId: string): GraphData {
+  return {
+    ...graph,
+    edges: graph.edges.filter((edge) => edge.id !== edgeId),
+  };
+}
+
 export function validateGraphInput(payload: unknown): {
   valid: boolean;
   errors: string[];

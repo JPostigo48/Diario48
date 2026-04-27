@@ -2,24 +2,37 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import AlgorithmPanel from "./AlgorithmPanel";
+import ElementEditorModal from "./ElementEditorModal";
 import GraphCanvas from "./GraphCanvas";
 import GraphEditorPanel from "./GraphEditorPanel";
 import StepControls from "./StepControls";
 import { algorithmOptions, runAlgorithm } from "@/lib/graph/algorithmSteps";
 import { sampleGraph } from "@/lib/graph/sampleGraph";
-import type { AlgorithmType, GraphData } from "@/lib/graph/types";
+import { graphThemes, type GraphThemeMode } from "@/lib/graph/theme";
+import type {
+  AlgorithmType,
+  GraphData,
+  GraphEdge,
+  GraphNode,
+  SelectedGraphElement,
+} from "@/lib/graph/types";
 import {
   cloneGraph,
   createEdge,
   createNode,
   createNodeId,
+  removeEdge,
+  removeNode,
+  updateEdgeDetails,
+  updateNodeDetails,
   updateNodePosition,
 } from "@/lib/graph/utils";
 
-const EMPTY_GRAPH_NAME = "Nuevo grafo";
+const EMPTY_GRAPH_NAME = "";
 
 export default function GraphToolPage() {
   const [algorithm, setAlgorithm] = useState<AlgorithmType>("bfs");
+  const [themeMode, setThemeMode] = useState<GraphThemeMode>("dark");
   const [graph, setGraph] = useState<GraphData | null>(null);
   const [graphName, setGraphName] = useState(EMPTY_GRAPH_NAME);
   const [graphDescription, setGraphDescription] = useState("");
@@ -31,6 +44,12 @@ export default function GraphToolPage() {
   const [loadingSavedGraphs, setLoadingSavedGraphs] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
   const [loadMessage, setLoadMessage] = useState("");
+  const [loadedGraphId, setLoadedGraphId] = useState<string | null>(null);
+  const [isMetadataEditing, setIsMetadataEditing] = useState(true);
+  const [isLoadModalOpen, setIsLoadModalOpen] = useState(false);
+  const [selectedElement, setSelectedElement] =
+    useState<SelectedGraphElement>(null);
+  const [isElementModalOpen, setIsElementModalOpen] = useState(false);
 
   const [nodeId, setNodeId] = useState("");
   const [nodeLabel, setNodeLabel] = useState("");
@@ -38,13 +57,26 @@ export default function GraphToolPage() {
   const [edgeSource, setEdgeSource] = useState("");
   const [edgeTarget, setEdgeTarget] = useState("");
   const [edgeWeight, setEdgeWeight] = useState("");
+  const [modalNodeLabel, setModalNodeLabel] = useState("");
+  const [modalNodeHeuristic, setModalNodeHeuristic] = useState("");
+  const [modalEdgeWeight, setModalEdgeWeight] = useState("");
 
   const autoPlayRef = useRef<number | null>(null);
+  const theme = graphThemes[themeMode];
+
+  const selectedNode: GraphNode | null =
+    selectedElement?.type === "node"
+      ? graph?.nodes.find((node) => node.id === selectedElement.id) ?? null
+      : null;
+  const selectedEdge: GraphEdge | null =
+    selectedElement?.type === "edge"
+      ? graph?.edges.find((edge) => edge.id === selectedElement.id) ?? null
+      : null;
 
   const syncGraphMetadata = useCallback(
     (baseGraph: GraphData): GraphData => ({
       ...baseGraph,
-      name: graphName || baseGraph.name || EMPTY_GRAPH_NAME,
+      name: graphName.trim() || baseGraph.name || "Nuevo grafo",
       description: graphDescription,
       startNode,
       goalNode,
@@ -61,7 +93,7 @@ export default function GraphToolPage() {
       algorithm,
       {
         ...graph,
-        name: graphName,
+        name: graphName.trim() || graph.name,
         description: graphDescription,
         startNode,
         goalNode,
@@ -83,6 +115,44 @@ export default function GraphToolPage() {
     setIsAutoPlaying(false);
   }, []);
 
+  const closeElementModal = useCallback(() => {
+    setIsElementModalOpen(false);
+  }, []);
+
+  const openElementModal = useCallback(
+    (element: SelectedGraphElement) => {
+      if (!element || !graph) {
+        return;
+      }
+
+      setSelectedElement(element);
+
+      if (element.type === "node") {
+        const node = graph.nodes.find((item) => item.id === element.id);
+        if (!node) {
+          return;
+        }
+        setModalNodeLabel(node.label);
+        setModalNodeHeuristic(
+          typeof node.heuristic === "number" ? String(node.heuristic) : "",
+        );
+      }
+
+      if (element.type === "edge") {
+        const edge = graph.edges.find((item) => item.id === element.id);
+        if (!edge) {
+          return;
+        }
+        setModalEdgeWeight(
+          typeof edge.weight === "number" ? String(edge.weight) : "",
+        );
+      }
+
+      setIsElementModalOpen(true);
+    },
+    [graph],
+  );
+
   const loadExample = useCallback(() => {
     const nextGraph = cloneGraph(sampleGraph);
     setGraph(nextGraph);
@@ -91,21 +161,30 @@ export default function GraphToolPage() {
     setStartNode(nextGraph.startNode ?? nextGraph.nodes[0]?.id ?? "");
     setGoalNode(nextGraph.goalNode ?? nextGraph.nodes.at(-1)?.id ?? "");
     setCurrentStepIndex(0);
+    setLoadedGraphId(null);
+    setIsMetadataEditing(true);
     setSaveMessage("");
     setLoadMessage("Grafo de ejemplo cargado.");
-  }, []);
+    setSelectedElement(null);
+    closeElementModal();
+  }, [closeElementModal]);
 
   const clearGraph = useCallback(() => {
     stopAutoPlay();
     setGraph(null);
-    setGraphName(EMPTY_GRAPH_NAME);
+    setGraphName("");
     setGraphDescription("");
     setStartNode("");
     setGoalNode("");
     setCurrentStepIndex(0);
+    setLoadedGraphId(null);
+    setIsMetadataEditing(true);
     setSaveMessage("");
-    setLoadMessage("Grafo limpiado.");
-  }, [stopAutoPlay]);
+    setLoadMessage("");
+    setIsLoadModalOpen(false);
+    setSelectedElement(null);
+    closeElementModal();
+  }, [closeElementModal, stopAutoPlay]);
 
   const refreshSavedGraphs = useCallback(async () => {
     setLoadingSavedGraphs(true);
@@ -142,6 +221,15 @@ export default function GraphToolPage() {
     }
   }, []);
 
+  const openLoadModal = useCallback(() => {
+    setIsLoadModalOpen(true);
+    void refreshSavedGraphs();
+  }, [refreshSavedGraphs]);
+
+  const closeLoadModal = useCallback(() => {
+    setIsLoadModalOpen(false);
+  }, []);
+
   const loadSavedGraph = useCallback(async (graphId: string) => {
     setLoadMessage("Cargando grafo guardado…");
 
@@ -169,40 +257,36 @@ export default function GraphToolPage() {
       setStartNode(nextGraph.startNode ?? nextGraph.nodes[0]?.id ?? "");
       setGoalNode(nextGraph.goalNode ?? nextGraph.nodes.at(-1)?.id ?? "");
       setCurrentStepIndex(0);
+      setLoadedGraphId(nextGraph.id ?? null);
+      setIsMetadataEditing(false);
+      setIsLoadModalOpen(false);
+      setSelectedElement(null);
+      closeElementModal();
       stopAutoPlay();
       setLoadMessage(`Grafo "${nextGraph.name}" cargado.`);
+      setSaveMessage("");
     } catch (error) {
       setLoadMessage(
         error instanceof Error ? error.message : "No se pudo cargar el grafo.",
       );
     }
-  }, [stopAutoPlay]);
+  }, [closeElementModal, stopAutoPlay]);
 
-  const saveGraph = useCallback(async () => {
+  const saveNewGraph = useCallback(async () => {
     if (!graph) {
       setSaveMessage("Primero crea o carga un grafo.");
       return;
     }
 
-    const payload = syncGraphMetadata(graph);
+    const payload = { ...syncGraphMetadata(graph) };
+    delete payload.id;
 
     try {
-      const requestInit: RequestInit = payload.id
-        ? {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-          }
-        : {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-          };
-
-      const response = await fetch(
-        payload.id ? `/api/graphs/${payload.id}` : "/api/graphs",
-        requestInit,
-      );
+      const response = await fetch("/api/graphs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
 
       const result = (await response.json()) as {
         data?: GraphData;
@@ -211,16 +295,14 @@ export default function GraphToolPage() {
       };
 
       if (!response.ok || !result.data) {
-        throw new Error(result.details?.join(" ") || result.error || "No se pudo guardar el grafo.");
+        throw new Error(
+          result.details?.join(" ") || result.error || "No se pudo guardar el grafo.",
+        );
       }
 
-      const persistedGraph = {
-        ...result.data,
-        id: result.data.id ?? (result.data as GraphData & { _id?: string })._id,
-      };
-
-      setGraph(persistedGraph);
-      setSaveMessage(`Grafo "${persistedGraph.name}" guardado correctamente.`);
+      setLoadedGraphId(null);
+      setIsMetadataEditing(true);
+      setSaveMessage(`Se creó un nuevo grafo: "${result.data.name}".`);
       await refreshSavedGraphs();
     } catch (error) {
       setSaveMessage(
@@ -229,6 +311,52 @@ export default function GraphToolPage() {
     }
   }, [graph, refreshSavedGraphs, syncGraphMetadata]);
 
+  const updateGraph = useCallback(async () => {
+    if (!graph || !loadedGraphId) {
+      setSaveMessage("No hay un grafo cargado para actualizar.");
+      return;
+    }
+
+    const payload = syncGraphMetadata(graph);
+
+    try {
+      const response = await fetch(`/api/graphs/${loadedGraphId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const result = (await response.json()) as {
+        data?: GraphData;
+        error?: string;
+        details?: string[];
+      };
+
+      if (!response.ok || !result.data) {
+        throw new Error(
+          result.details?.join(" ") || result.error || "No se pudo actualizar el grafo.",
+        );
+      }
+
+      const persistedGraph = {
+        ...result.data,
+        id: result.data.id ?? (result.data as GraphData & { _id?: string })._id,
+      };
+
+      setGraph(persistedGraph);
+      setGraphName(persistedGraph.name);
+      setGraphDescription(persistedGraph.description ?? "");
+      setLoadedGraphId(persistedGraph.id ?? loadedGraphId);
+      setIsMetadataEditing(false);
+      setSaveMessage(`Grafo "${persistedGraph.name}" actualizado.`);
+      await refreshSavedGraphs();
+    } catch (error) {
+      setSaveMessage(
+        error instanceof Error ? error.message : "No se pudo actualizar el grafo.",
+      );
+    }
+  }, [graph, loadedGraphId, refreshSavedGraphs, syncGraphMetadata]);
+
   const addNode = useCallback(() => {
     const baseLabel = nodeLabel || nodeId || "N";
 
@@ -236,7 +364,7 @@ export default function GraphToolPage() {
       const safeGraph =
         currentGraph ??
         ({
-          name: graphName || EMPTY_GRAPH_NAME,
+          name: graphName.trim() || "Nuevo grafo",
           description: graphDescription,
           isPublic: true,
           nodes: [],
@@ -269,7 +397,7 @@ export default function GraphToolPage() {
 
       const nextGraph: GraphData = {
         ...safeGraph,
-        name: graphName || safeGraph.name || EMPTY_GRAPH_NAME,
+        name: graphName.trim() || safeGraph.name || "Nuevo grafo",
         description: graphDescription,
         startNode: safeGraph.startNode || startNode || resolvedId,
         goalNode: safeGraph.goalNode || goalNode || resolvedId,
@@ -314,8 +442,8 @@ export default function GraphToolPage() {
     }
 
     if (
-      !graph.nodes.some((node) => node.id === edgeSource.trim()) ||
-      !graph.nodes.some((node) => node.id === edgeTarget.trim())
+      !graph.nodes.some((node) => node.id === edgeSource.trim().toUpperCase()) ||
+      !graph.nodes.some((node) => node.id === edgeTarget.trim().toUpperCase())
     ) {
       setSaveMessage("La arista referencia nodos que no existen.");
       return;
@@ -334,7 +462,7 @@ export default function GraphToolPage() {
 
     setGraph({
       ...graph,
-      name: graphName || graph.name,
+      name: graphName.trim() || graph.name,
       description: graphDescription,
       startNode,
       goalNode,
@@ -368,15 +496,89 @@ export default function GraphToolPage() {
     [],
   );
 
+  const handleSaveElementChanges = useCallback(() => {
+    if (!graph || !selectedElement) {
+      return;
+    }
+
+    if (selectedElement.type === "node") {
+      const heuristicValue = modalNodeHeuristic.trim();
+      const nextGraph = updateNodeDetails(graph, selectedElement.id, {
+        label: modalNodeLabel.trim() || selectedElement.id,
+        heuristic:
+          heuristicValue === ""
+            ? undefined
+            : Number.isFinite(Number(heuristicValue))
+              ? Number(heuristicValue)
+              : undefined,
+      });
+      setGraph(nextGraph);
+      setSaveMessage(`Nodo "${selectedElement.id}" actualizado.`);
+    }
+
+    if (selectedElement.type === "edge") {
+      const weightValue = modalEdgeWeight.trim();
+      const nextGraph = updateEdgeDetails(graph, selectedElement.id, {
+        weight:
+          weightValue === ""
+            ? undefined
+            : Number.isFinite(Number(weightValue))
+              ? Number(weightValue)
+              : undefined,
+      });
+      setGraph(nextGraph);
+      setSaveMessage(`Arista "${selectedElement.id}" actualizada.`);
+    }
+
+    closeElementModal();
+  }, [
+    closeElementModal,
+    graph,
+    modalEdgeWeight,
+    modalNodeHeuristic,
+    modalNodeLabel,
+    selectedElement,
+  ]);
+
+  const handleDeleteElement = useCallback(() => {
+    if (!graph || !selectedElement) {
+      return;
+    }
+
+    if (selectedElement.type === "node") {
+      const nextGraph = removeNode(graph, selectedElement.id);
+      setGraph(nextGraph);
+      if (startNode === selectedElement.id) {
+        setStartNode("");
+      }
+      if (goalNode === selectedElement.id) {
+        setGoalNode("");
+      }
+      setSaveMessage(
+        `Nodo "${selectedElement.id}" eliminado junto con sus aristas conectadas.`,
+      );
+    }
+
+    if (selectedElement.type === "edge") {
+      const nextGraph = removeEdge(graph, selectedElement.id);
+      setGraph(nextGraph);
+      setSaveMessage(`Arista "${selectedElement.id}" eliminada.`);
+    }
+
+    setSelectedElement(null);
+    closeElementModal();
+    setCurrentStepIndex(0);
+  }, [closeElementModal, goalNode, graph, selectedElement, startNode]);
+
   const handleRun = useCallback(() => {
     if (!graph) {
       loadExample();
       return;
     }
 
-      setCurrentStepIndex((currentIndex) =>
-        currentIndex < steps.length - 1 ? currentIndex + 1 : currentIndex,
-      );
+    setCurrentStepIndex((currentIndex) =>
+      currentIndex < steps.length - 1 ? currentIndex + 1 : currentIndex,
+    );
   }, [graph, loadExample, steps.length]);
 
   const handleNext = useCallback(() => {
@@ -428,11 +630,21 @@ export default function GraphToolPage() {
   useEffect(() => () => stopAutoPlay(), [stopAutoPlay]);
 
   return (
-    <main className="flex h-screen w-screen flex-col overflow-hidden rounded-[12px] border border-[#1a1d28] bg-[#090a0d] text-[#dde1ea]">
-      <header className="flex items-center justify-between gap-3 border-b border-[#1a1d28] bg-[#0a0b0e] px-5 py-2.5">
+    <main
+      className="flex h-screen w-screen flex-col overflow-hidden rounded-[12px] border"
+      style={{
+        borderColor: theme.border,
+        backgroundColor: theme.appBg,
+        color: theme.appText,
+      }}
+    >
+      <header
+        className="flex items-center justify-between gap-3 border-b px-5 py-2.5"
+        style={{ borderColor: theme.border, backgroundColor: theme.panelBg }}
+      >
         <div className="flex items-center gap-3">
-          <div className="font-mono text-[11px] text-[#374151]">
-            diario48 / <span className="text-[#4f8ef7]">visualizador de grafos</span>
+          <div className="font-mono text-[11px]" style={{ color: theme.mutedText }}>
+            diario48 / <span style={{ color: theme.accent }}>visualizador de grafos</span>
           </div>
 
           <div className="flex gap-1">
@@ -443,12 +655,20 @@ export default function GraphToolPage() {
                 onClick={() => option.available && setAlgorithm(option.type)}
                 disabled={!option.available}
                 className={`rounded-[4px] border px-2.5 py-1 font-mono text-[10px] tracking-[0.3px] transition-all ${
-                  option.type === algorithm
-                    ? "border-[#4f8ef755] bg-[#4f8ef718] text-[#4f8ef7]"
-                    : option.available
-                      ? "border-[#1a1d28] text-[#4b5563] hover:border-[#2a3040] hover:text-[#9ca3af]"
-                      : "cursor-not-allowed border-[#1a1d28] text-[#4b5563] opacity-35"
+                  !option.available ? "cursor-not-allowed opacity-35" : ""
                 }`}
+                style={
+                  option.type === algorithm
+                    ? {
+                        borderColor: `${theme.accent}55`,
+                        backgroundColor: theme.accentSoft,
+                        color: theme.accent,
+                      }
+                    : {
+                        borderColor: theme.border,
+                        color: theme.mutedText,
+                      }
+                }
               >
                 {option.label}
               </button>
@@ -459,17 +679,23 @@ export default function GraphToolPage() {
         <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={loadExample}
-            className="rounded-[4px] border border-[#1a1d28] bg-transparent px-3 py-1.5 font-mono text-[10px] text-[#6b7280] transition-all hover:border-[#2a3040] hover:text-[#9ca3af]"
+            onClick={() =>
+              setThemeMode((currentMode) =>
+                currentMode === "dark" ? "light" : "dark",
+              )
+            }
+            className="rounded-[4px] border px-3 py-1.5 font-mono text-[10px] transition-all"
+            style={{ borderColor: theme.border, color: theme.accent }}
           >
-            cargar ejemplo
+            {themeMode === "dark" ? "light mode" : "dark mode"}
           </button>
           <button
             type="button"
-            onClick={clearGraph}
-            className="rounded-[4px] border border-[#1a1d28] bg-transparent px-3 py-1.5 font-mono text-[10px] text-[#6b7280] transition-all hover:border-[#ef444455] hover:text-[#ef4444]"
+            onClick={loadExample}
+            className="rounded-[4px] border bg-transparent px-3 py-1.5 font-mono text-[10px] transition-all"
+            style={{ borderColor: theme.border, color: theme.mutedText }}
           >
-            limpiar
+            cargar ejemplo
           </button>
         </div>
       </header>
@@ -491,6 +717,10 @@ export default function GraphToolPage() {
           loadingSavedGraphs={loadingSavedGraphs}
           saveMessage={saveMessage}
           loadMessage={loadMessage}
+          theme={theme}
+          loadedGraphId={loadedGraphId}
+          isMetadataEditing={isMetadataEditing}
+          isLoadModalOpen={isLoadModalOpen}
           onGraphNameChange={setGraphName}
           onGraphDescriptionChange={setGraphDescription}
           onNodeIdChange={setNodeId}
@@ -503,20 +733,23 @@ export default function GraphToolPage() {
           onGoalNodeChange={setGoalNode}
           onAddNode={addNode}
           onAddEdge={addEdge}
-          onLoadExample={loadExample}
           onClearGraph={clearGraph}
-          onSaveGraph={saveGraph}
+          onSaveNewGraph={saveNewGraph}
+          onUpdateGraph={updateGraph}
           onRefreshSavedGraphs={refreshSavedGraphs}
           onLoadSavedGraph={loadSavedGraph}
+          onOpenLoadModal={openLoadModal}
+          onCloseLoadModal={closeLoadModal}
+          onEnableMetadataEditing={() => setIsMetadataEditing(true)}
         />
 
-        <div className="flex min-w-0 flex-col overflow-hidden border-x border-[#1a1d28]">
+        <div className="flex min-w-0 flex-col overflow-hidden border-x" style={{ borderColor: theme.border }}>
           <GraphCanvas
             graph={
               graph
                 ? {
                     ...graph,
-                    name: graphName,
+                    name: graphName.trim() || graph.name,
                     description: graphDescription,
                     startNode,
                     goalNode,
@@ -524,13 +757,22 @@ export default function GraphToolPage() {
                 : null
             }
             step={currentStep}
+            themeMode={themeMode}
+            canvasBackground={theme.canvasBg}
+            gridColor={theme.gridColor}
+            dimText={theme.dimText}
+            borderColor={theme.border}
+            selectedElement={selectedElement}
             onNodePositionChange={handleNodePositionChange}
+            onSelectElement={setSelectedElement}
+            onOpenElementModal={openElementModal}
           />
           <StepControls
             currentStepIndex={effectiveStepIndex}
             totalSteps={steps.length}
             canRun={steps.length > 0}
             isAutoPlaying={isAutoPlaying}
+            theme={theme}
             onRun={handleRun}
             onPrevious={handlePrevious}
             onNext={handleNext}
@@ -539,8 +781,26 @@ export default function GraphToolPage() {
           />
         </div>
 
-        <AlgorithmPanel algorithm={algorithm} step={currentStep} />
+        <AlgorithmPanel algorithm={algorithm} step={currentStep} theme={theme} />
       </section>
+
+      {isElementModalOpen ? (
+        <ElementEditorModal
+          theme={theme}
+          selectedElement={selectedElement}
+          selectedNode={selectedNode}
+          selectedEdge={selectedEdge}
+          nodeLabel={modalNodeLabel}
+          nodeHeuristic={modalNodeHeuristic}
+          edgeWeight={modalEdgeWeight}
+          onNodeLabelChange={setModalNodeLabel}
+          onNodeHeuristicChange={setModalNodeHeuristic}
+          onEdgeWeightChange={setModalEdgeWeight}
+          onClose={closeElementModal}
+          onSave={handleSaveElementChanges}
+          onDelete={handleDeleteElement}
+        />
+      ) : null}
     </main>
   );
 }

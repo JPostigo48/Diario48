@@ -60,3 +60,8 @@ export interface AlgorithmOption {
   label: string;
   available: boolean;
 }
+
+export type SelectedGraphElement =
+  | { type: "node"; id: string }
+  | { type: "edge"; id: string }
+  | null;

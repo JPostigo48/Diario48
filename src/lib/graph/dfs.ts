@@ -8,14 +8,14 @@ import {
   reconstructPath,
 } from "./traversal";
 
-export function runBfs(graph: GraphData, startId: string, goalId?: string) {
+export function runDfs(graph: GraphData, startId: string, goalId?: string) {
   if (!startId || !graph.nodes.some((node) => node.id === startId)) {
     return createEmptyAlgorithmResult();
   }
 
   const nodeStates = createNodeStateMap(graph);
   const edgeStates = createEdgeStateMap(graph);
-  const queue: string[] = [startId];
+  const stack: string[] = [startId];
   const visited = new Set<string>();
   const discovered = new Set<string>([startId]);
   const parentMap: Record<string, string | null> = { [startId]: null };
@@ -26,11 +26,11 @@ export function runBfs(graph: GraphData, startId: string, goalId?: string) {
 
   steps.push({
     stepNumber: 1,
-    actionLabel: "inicio · bfs",
-    description: `Inicializando BFS desde ${startId}. Cola inicial: [${startId}]`,
+    actionLabel: "inicio · dfs",
+    description: `Inicializando DFS desde ${startId}. Pila inicial: [${startId}]`,
     currentNode: null,
     visited: [],
-    frontier: [...queue],
+    frontier: [...stack],
     exploredEdges: [],
     path: [],
     nodeStates: { ...nodeStates },
@@ -39,8 +39,8 @@ export function runBfs(graph: GraphData, startId: string, goalId?: string) {
 
   let exploredEdgeIds: string[] = [];
 
-  while (queue.length > 0) {
-    const current = queue.shift();
+  while (stack.length > 0) {
+    const current = stack.pop();
 
     if (!current || visited.has(current)) {
       continue;
@@ -59,10 +59,10 @@ export function runBfs(graph: GraphData, startId: string, goalId?: string) {
     steps.push({
       stepNumber: steps.length + 1,
       actionLabel: `procesando · ${current}`,
-      description: `Se desencola ${current} y se exploran sus vecinos.`,
+      description: `Se desapila ${current} y se profundiza sobre sus vecinos.`,
       currentNode: current,
       visited: [...visitedOrder],
-      frontier: [...queue],
+      frontier: [...stack],
       exploredEdges: [...exploredEdgeIds],
       path: [],
       nodeStates: { ...nodeStates },
@@ -84,10 +84,10 @@ export function runBfs(graph: GraphData, startId: string, goalId?: string) {
       steps.push({
         stepNumber: steps.length + 1,
         actionLabel: `objetivo encontrado · ${goalId}`,
-        description: `Camino final: ${path.join(" → ")}`,
+        description: `Camino encontrado por DFS: ${path.join(" → ")}`,
         currentNode: current,
         visited: [...visitedOrder],
-        frontier: [...queue],
+        frontier: [...stack],
         exploredEdges: [...exploredEdgeIds, ...pathEdgeIds],
         path,
         nodeStates: { ...nodeStates },
@@ -100,7 +100,7 @@ export function runBfs(graph: GraphData, startId: string, goalId?: string) {
     const newFrontier: string[] = [];
     const neighbors = findNeighbors(graph, current);
 
-    for (const { edgeId, neighbor } of neighbors) {
+    for (const { edgeId, neighbor } of [...neighbors].reverse()) {
       edgeStates[edgeId] = "explored";
       exploredEdgeIds = Array.from(new Set([...exploredEdgeIds, edgeId]));
 
@@ -110,8 +110,9 @@ export function runBfs(graph: GraphData, startId: string, goalId?: string) {
 
       discovered.add(neighbor);
       parentMap[neighbor] = current;
-      queue.push(neighbor);
+      stack.push(neighbor);
       newFrontier.push(neighbor);
+
       if (nodeStates[neighbor] === "unvisited") {
         nodeStates[neighbor] = "frontier";
       }
@@ -124,11 +125,11 @@ export function runBfs(graph: GraphData, startId: string, goalId?: string) {
       actionLabel: `frontera actualizada · ${current}`,
       description:
         newFrontier.length > 0
-          ? `Se agregan a la cola: ${newFrontier.join(", ")}`
-          : `No hay nuevos vecinos por agregar desde ${current}.`,
+          ? `Se apilan para explorar: ${newFrontier.join(", ")}`
+          : `No hay nuevos vecinos por profundizar desde ${current}.`,
       currentNode: current,
       visited: [...visitedOrder],
-      frontier: [...queue],
+      frontier: [...stack],
       exploredEdges: [...exploredEdgeIds],
       path: [],
       nodeStates: { ...nodeStates },
@@ -140,8 +141,8 @@ export function runBfs(graph: GraphData, startId: string, goalId?: string) {
     stepNumber: steps.length + 1,
     actionLabel: "búsqueda finalizada",
     description: goalId
-      ? `No existe un camino desde ${startId} hasta ${goalId}.`
-      : `BFS completado desde ${startId}.`,
+      ? `No existe un camino desde ${startId} hasta ${goalId} con DFS.`
+      : `DFS completado desde ${startId}.`,
     currentNode: null,
     visited: [...visitedOrder],
     frontier: [],
