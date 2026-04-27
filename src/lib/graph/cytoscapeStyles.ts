@@ -64,8 +64,8 @@ export function buildCytoscapeStyles(
     {
       selector: ".node-visited",
       style: {
-        "background-color": theme.successSoft,
-        "border-color": theme.success,
+        "background-color": theme.accentSoft,
+        "border-color": theme.accent,
         color: theme.strongText,
       },
     },
@@ -128,7 +128,7 @@ export function buildCytoscapeStyles(
     styles.push({
       selector: `node[id = "${startId}"]`,
       style: {
-        "border-color": theme.accent,
+        "border-color": theme.start,
         "border-width": 2.4,
       },
     });

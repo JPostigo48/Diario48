@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=1400"/>
+<title>Diario48 — Rediseño UI/UX</title>
+<link rel="stylesheet" href="shared/tokens.css"/>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<style>
+  html, body { margin: 0; height: 100%; }
+  /* Force light surface inside the design canvas (it has its own warm bg) */
+  .frame-wrap {
+    width: 100%; height: 100%;
+    border: 1px solid rgba(0,0,0,0.08);
+    border-radius: 6px;
+    overflow: hidden;
+    background: #0B0E14;
+  }
+  .frame-wrap iframe {
+    width: 100%;
+    height: 100%;
+    border: 0;
+    display: block;
+  }
+  .notes {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 13px;
+    line-height: 1.7;
+    color: rgba(40,30,20,0.85);
+    background: #fef4a8;
+    padding: 16px 20px;
+    border-radius: 4px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    width: 320px;
+    transform: rotate(-1deg);
+  }
+  .notes h4 {
+    margin: 0 0 8px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: rgba(60,50,40,0.6);
+    font-weight: 700;
+  }
+  .notes ul { margin: 0; padding-left: 18px; }
+  .notes li { margin-bottom: 4px; }
+  .notes em { color: #c96442; font-style: normal; font-weight: 600; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" src="design-canvas.jsx"></script>
+
+<script type="text/babel">
+const { DesignCanvas, DCSection, DCArtboard, DCPostIt } = window;
+
+function FrameArtboard({ src }) {
+  return (
+    <div className="frame-wrap">
+      <iframe src={src} loading="lazy" title={src}/>
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <DesignCanvas>
+
+      {/* INTRO */}
+      <DCSection id="intro" title="Diario48 · Rediseño UI/UX" subtitle="Mejoras de legibilidad, jerarquía y densidad — manteniendo la identidad notebook">
+        <DCPostIt>
+          <h4>// resumen</h4>
+          Tu app tiene una <em>identidad muy buena</em> (notebook técnico, comentarios <code>//</code>, mono).
+          El problema no es el estilo, es:<br/><br/>
+          1. <em>Tipografía pequeña</em> (10–11px en muchos sitios)<br/>
+          2. <em>Bajo contraste</em> en dark mode (texto gris sobre gris)<br/>
+          3. <em>Densidad uniforme</em> — no hay jerarquía<br/>
+          4. <em>Panel derecho subutilizado</em>: el "paso actual" debe ser el héroe
+        </DCPostIt>
+        <DCPostIt>
+          <h4>// qué cambié (sistema)</h4>
+          • Tipografía: <em>JetBrains Mono</em> (mejor a tamaños chicos) + Inter para UI<br/>
+          • Tamaño base: <em>13px</em> (era ~11px). Labels 11px UPPERCASE<br/>
+          • Dark: fondo <em>#0B0E14</em> cálido, no negro puro. Surfaces escalonadas<br/>
+          • Light: <em>#FAFAF7</em> (off-white papel)<br/>
+          • <em>6 colores semánticos</em> por estado de nodo (inicio, objetivo, actual, frontera, visitado, camino)
+        </DCPostIt>
+      </DCSection>
+
+      {/* VARIATION 1 */}
+      <DCSection id="v1" title="Variación 1 · Cards & Stat Grid" subtitle="Refina el layout actual: mismas zonas (izq config / der estado), pero con jerarquía y aire">
+        <DCArtboard id="v1-dark" label="dark mode" width={1400} height={840}>
+          <FrameArtboard src="variations/v1-dark.html"/>
+        </DCArtboard>
+        <DCArtboard id="v1-light" label="light mode" width={1400} height={840}>
+          <FrameArtboard src="variations/v1-light.html"/>
+        </DCArtboard>
+        <DCPostIt>
+          <h4>// qué cambia vs hoy</h4>
+          • Tabs de algoritmo en <em>segmented control</em> (ahora claro cuál está activo)<br/>
+          • Panel derecho: paso actual como <em>héroe</em> con barra de progreso<br/>
+          • <em>Stat grid 2×2</em>: procesando · objetivo · cola · visitados — chips de color por estado<br/>
+          • Acción actual con prefix <em>›</em> tipo terminal<br/>
+          • Tabla de costos colapsada cuando no aplica (BFS/DFS)<br/>
+          • <em>Leyenda flotante</em> arriba-izq del canvas<br/>
+          • Atajos de teclado visibles (←/→) en la playback bar<br/>
+          • Botón principal "ejecutar" diferenciado (color sólido vs ghost)
+        </DCPostIt>
+      </DCSection>
+
+      {/* VARIATION 2 */}
+      <DCSection id="v2" title="Variación 2 · Timeline & Inspector" subtitle="Reframe del estado: línea de tiempo del algoritmo arriba, inspector contextual a la derecha">
+        <DCArtboard id="v2-dark" label="dark mode" width={1400} height={840}>
+          <FrameArtboard src="variations/v2-dark.html"/>
+        </DCArtboard>
+        <DCArtboard id="v2-light" label="light mode" width={1400} height={840}>
+          <FrameArtboard src="variations/v2-light.html"/>
+        </DCArtboard>
+        <DCPostIt>
+          <h4>// el cambio grande</h4>
+          La línea de tiempo arriba muestra <em>todo el recorrido</em> en un vistazo: cada paso es un punto coloreado por el tipo de evento (visit · enqueue · expand · found).<br/><br/>
+          Permite <em>ver el algoritmo como una secuencia</em>, no solo el estado actual. Útil para enseñanza.
+        </DCPostIt>
+        <DCPostIt>
+          <h4>// otros cambios</h4>
+          • Panel izq colapsado a <em>rail de iconos</em> + drawer (más espacio para grafo)<br/>
+          • Slider de progreso scrubbable en playback bar<br/>
+          • Tooltip flotante sobre el grafo con metadata del nodo actual (g(n), padre)<br/>
+          • Métricas extras al final: profundidad, bif. promedio, memoria<br/>
+          • Tag en cabecera del inspector indica el <em>tipo de evento</em> (VISIT, EXPAND…)<br/>
+          • Heurística h(n) muestra placeholder cuando no aplica (claridad)
+        </DCPostIt>
+      </DCSection>
+
+      {/* RECOMMENDATIONS */}
+      <DCSection id="reco" title="Recomendaciones de UX (independientes del rediseño)" subtitle="3 mejoras pequeñas que aplicarían en cualquier dirección">
+        <DCPostIt>
+          <h4>// 1. atajos de teclado</h4>
+          <em>← / →</em> para anterior/siguiente<br/>
+          <em>espacio</em> para play/pause<br/>
+          <em>r</em> para reiniciar<br/>
+          <em>1-5</em> para cambiar de algoritmo<br/><br/>
+          La gente que estudia algoritmos vive en el teclado.
+        </DCPostIt>
+        <DCPostIt>
+          <h4>// 2. paso scrubbable</h4>
+          Una <em>barra de progreso clickeable</em> en la playback bar para saltar a cualquier paso del algoritmo (no solo siguiente/anterior).<br/><br/>
+          Útil para volver al "antes de fallar" cuando algo se ve raro.
+        </DCPostIt>
+        <DCPostIt>
+          <h4>// 3. estados sin datos vacíos</h4>
+          Hoy varios paneles dicen <em>"sin datos"</em> o <em>"--"</em> incluso cuando podrían mostrar info útil:<br/><br/>
+          • Tabla de costos → "Disponible en A* y Greedy"<br/>
+          • Camino actual → "Sin camino · siga avanzando"<br/>
+          • Heurística → "No requerida para BFS"<br/><br/>
+          Mejor <em>explicar el porqué</em> que mostrar vacío.
+        </DCPostIt>
+      </DCSection>
+
+    </DesignCanvas>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

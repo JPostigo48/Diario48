@@ -1,5 +1,9 @@
 import type { GraphTheme } from "@/lib/graph/theme";
-import type { AlgorithmStep, AlgorithmType } from "@/lib/graph/types";
+import type {
+  AlgorithmCostRow,
+  AlgorithmStep,
+  AlgorithmType,
+} from "@/lib/graph/types";
 
 type AlgorithmPanelProps = {
   algorithm: AlgorithmType;
@@ -7,62 +11,118 @@ type AlgorithmPanelProps = {
   theme: GraphTheme;
 };
 
-function InfoCard({
+function Section({
   title,
+  hint,
   theme,
-  className = "",
   children,
 }: {
   title: string;
+  hint?: string;
   theme: GraphTheme;
-  className?: string;
   children: React.ReactNode;
 }) {
   return (
     <section
-      className={`rounded-[6px] border p-3 ${className}`}
+      className="rounded-[10px] border p-3"
       style={{ borderColor: theme.border, backgroundColor: theme.panelSurface }}
     >
-      <div className="mb-1.5 font-mono text-[8px] uppercase tracking-[1.5px]" style={{ color: theme.dimText }}>
-        {title}
+      <div className="mb-2 flex items-baseline justify-between gap-3">
+        <span
+          className="font-mono text-[11px] uppercase tracking-[0.04em]"
+          style={{ color: theme.mutedText }}
+        >
+          {`// ${title}`}
+        </span>
+        {hint ? (
+          <span className="font-mono text-[11px]" style={{ color: theme.faintText }}>
+            {hint}
+          </span>
+        ) : null}
       </div>
       {children}
     </section>
   );
 }
 
-function NodePill({
-  nodeId,
-  variant,
+function Chip({
+  value,
+  tone,
   theme,
 }: {
-  nodeId: string;
-  variant: "visited" | "frontier" | "path";
+  value: string;
+  tone: "visited" | "frontier" | "path";
   theme: GraphTheme;
 }) {
   const styles = {
     visited: {
-      borderColor: `${theme.success}44`,
-      backgroundColor: theme.successSoft,
-      color: theme.success,
+      color: theme.secondaryText,
+      borderColor: theme.border,
+      backgroundColor: theme.panelSurfaceAlt,
     },
     frontier: {
-      borderColor: `${theme.warning}44`,
-      backgroundColor: theme.warningSoft,
-      color: theme.warning,
+      color: theme.path,
+      borderColor: `${theme.path}55`,
+      backgroundColor: theme.pathSoft,
     },
     path: {
-      borderColor: `${theme.path}44`,
+      color: theme.goal,
+      borderColor: `${theme.goal}55`,
       backgroundColor: theme.pathSoft,
-      color: theme.path,
     },
-  };
+  } as const;
 
   return (
-    <span className="rounded-[3px] border px-2 py-0.5 font-mono text-[10px]" style={styles[variant]}>
-      {nodeId}
+    <span
+      className="rounded-[4px] border px-2 py-1 font-mono text-[12px]"
+      style={styles[tone]}
+    >
+      {value}
     </span>
   );
+}
+
+function resolveEventTone(step: AlgorithmStep | null, theme: GraphTheme) {
+  if (!step) {
+    return {
+      label: "espera",
+      color: theme.mutedText,
+      backgroundColor: theme.panelSurfaceAlt,
+      borderColor: theme.border,
+    };
+  }
+
+  const label = step.actionLabel.toLowerCase();
+  if (label.includes("objetivo")) {
+    return {
+      label: "found",
+      color: theme.goal,
+      backgroundColor: theme.pathSoft,
+      borderColor: `${theme.goal}55`,
+    };
+  }
+  if (label.includes("procesando")) {
+    return {
+      label: "visit",
+      color: theme.warning,
+      backgroundColor: theme.warningSoft,
+      borderColor: `${theme.warning}55`,
+    };
+  }
+  if (label.includes("inicio")) {
+    return {
+      label: "init",
+      color: theme.accent,
+      backgroundColor: theme.accentSoft,
+      borderColor: `${theme.accent}55`,
+    };
+  }
+  return {
+    label: "expand",
+    color: theme.accent,
+    backgroundColor: theme.accentSoft,
+    borderColor: `${theme.accent}55`,
+  };
 }
 
 export default function AlgorithmPanel({
@@ -70,91 +130,243 @@ export default function AlgorithmPanel({
   step,
   theme,
 }: AlgorithmPanelProps) {
-  return (
-    <aside className="d48-scrollbar flex flex-col gap-2.5 overflow-y-auto p-3.5" style={{ backgroundColor: theme.panelBg }}>
-      <InfoCard title="// paso actual" theme={theme}>
-        <div className="font-mono text-[14px] font-medium" style={{ color: theme.accent }}>
-          {step?.actionLabel ?? "—"}
-        </div>
-      </InfoCard>
+  const tone = resolveEventTone(step, theme);
+  const frontierLabel = algorithm === "dfs" ? "pila / frontera" : "cola / frontera";
+  const isUniformCost = algorithm === "uniform-cost";
 
-      <InfoCard title="// nodo procesando" theme={theme}>
-        <div className="font-mono text-[16px] font-medium" style={{ color: theme.danger }}>
+  return (
+    <aside
+      className="d48-scrollbar flex flex-col gap-3 overflow-y-auto p-3.5"
+      style={{ backgroundColor: theme.panelBg }}
+    >
+      <section
+        className="rounded-[10px] border p-4"
+        style={{ borderColor: theme.border, backgroundColor: theme.panelSurface }}
+      >
+        <div className="mb-3 flex items-start justify-between gap-3">
+          <span
+            className="font-mono text-[11px] uppercase tracking-[0.04em]"
+            style={{ color: theme.mutedText }}
+          >
+            {"// inspector"}
+          </span>
+          <span
+            className="rounded-[4px] border px-2 py-1 font-mono text-[11px] uppercase tracking-[0.05em]"
+            style={{
+              color: tone.color,
+              backgroundColor: tone.backgroundColor,
+              borderColor: tone.borderColor,
+            }}
+          >
+            {tone.label}
+          </span>
+        </div>
+
+        <div
+          className="font-mono text-[32px] font-bold leading-none"
+          style={{ color: theme.strongText }}
+        >
           {step?.currentNode ?? "—"}
         </div>
-      </InfoCard>
-
-      <InfoCard title="// visitados" theme={theme}>
-        <div className="flex flex-wrap gap-1">
-          {step?.visited.length ? (
-            step.visited.map((nodeId) => (
-              <NodePill key={nodeId} nodeId={nodeId} variant="visited" theme={theme} />
-            ))
-          ) : (
-            <span className="font-mono text-[10px]" style={{ color: theme.dimText }}>sin datos</span>
-          )}
+        <div
+          className="mt-2 font-sans text-[13px] leading-[1.55]"
+          style={{ color: theme.secondaryText }}
+        >
+          {step?.description ??
+            "Carga un ejemplo y usa la timeline superior para recorrer la simulación."}
         </div>
-      </InfoCard>
 
-      <InfoCard title="// cola / frontera" theme={theme}>
-        <div className="flex flex-wrap gap-1">
+        <div className="mt-4 grid grid-cols-2 gap-2">
+          <MetricCard
+            label="procesando"
+            value={step?.currentNode ?? "—"}
+            theme={theme}
+            accent={theme.warning}
+          />
+          <MetricCard
+            label="paso"
+            value={step ? String(step.stepNumber) : "0"}
+            theme={theme}
+            accent={theme.accent}
+          />
+          <MetricCard
+            label="frontera"
+            value={String(step?.frontier.length ?? 0)}
+            theme={theme}
+            accent={theme.path}
+          />
+          <MetricCard
+            label="visitados"
+            value={String(step?.visited.length ?? 0)}
+            theme={theme}
+            accent={theme.secondaryText}
+          />
+        </div>
+      </section>
+
+      <Section title={frontierLabel} hint={String(step?.frontier.length ?? 0)} theme={theme}>
+        <div className="flex flex-wrap gap-1.5">
           {step?.frontier.length ? (
             step.frontier.map((nodeId) => (
-              <NodePill key={nodeId} nodeId={nodeId} variant="frontier" theme={theme} />
+              <Chip key={nodeId} value={nodeId} tone="frontier" theme={theme} />
             ))
           ) : (
-            <span className="font-mono text-[10px]" style={{ color: theme.dimText }}>vacía</span>
+            <span className="font-mono text-[11px]" style={{ color: theme.mutedText }}>
+              vacía
+            </span>
           )}
         </div>
-      </InfoCard>
+      </Section>
 
-      <InfoCard title="// camino actual" theme={theme}>
-        <div className="flex flex-wrap gap-1">
+      <Section title="visitados" hint={String(step?.visited.length ?? 0)} theme={theme}>
+        <div className="flex flex-wrap gap-1.5">
+          {step?.visited.length ? (
+            step.visited.map((nodeId) => (
+              <Chip key={nodeId} value={nodeId} tone="visited" theme={theme} />
+            ))
+          ) : (
+            <span className="font-mono text-[11px]" style={{ color: theme.mutedText }}>
+              sin datos
+            </span>
+          )}
+        </div>
+      </Section>
+
+      <Section title="camino actual" hint={step?.path.length ? "final" : "—"} theme={theme}>
+        <div className="flex flex-wrap gap-1.5">
           {step?.path.length ? (
             step.path.map((nodeId) => (
-              <NodePill key={nodeId} nodeId={nodeId} variant="path" theme={theme} />
+              <Chip key={nodeId} value={nodeId} tone="path" theme={theme} />
             ))
           ) : (
-            <span className="font-mono text-[10px]" style={{ color: theme.dimText }}>sin camino final</span>
+            <span className="font-mono text-[11px]" style={{ color: theme.mutedText }}>
+              sin camino final · siga avanzando
+            </span>
           )}
         </div>
-      </InfoCard>
+      </Section>
 
-      <InfoCard title="// acción actual" theme={theme} className="flex-1">
-        <p className="font-mono text-[11px] leading-[1.6]" style={{ color: theme.mutedText }}>
-          {step?.description ??
-            "Carga un ejemplo y presiona ejecutar para iniciar la simulación paso a paso."}
-        </p>
-      </InfoCard>
+      <Section
+        title={`costos · ${isUniformCost ? "g(n)" : algorithm === "astar" ? "A*" : "informado"}`}
+        hint={
+          isUniformCost
+            ? `${step?.costRows?.length ?? 0} nodos`
+            : algorithm === "bfs" || algorithm === "dfs"
+              ? "no aplica"
+              : "pendiente"
+        }
+        theme={theme}
+      >
+        {isUniformCost ? (
+          <CostTable rows={step?.costRows ?? []} theme={theme} />
+        ) : (
+          <div
+            className="rounded-[8px] border px-3 py-2 font-mono text-[11px] leading-[1.6]"
+            style={{
+              borderColor: theme.border,
+              backgroundColor: theme.panelSurfaceAlt,
+              color: theme.mutedText,
+            }}
+          >
+            {algorithm === "bfs" || algorithm === "dfs"
+              ? "h(n) no se requiere para este algoritmo. Esta tabla se activará en A* y Greedy."
+              : "La tabla de costos quedará disponible cuando se implemente el algoritmo informado."}
+          </div>
+        )}
+      </Section>
+    </aside>
+  );
+}
 
-      <InfoCard title={`// tabla de costos (${algorithm === "astar" ? "A*" : "A*"})`} theme={theme}>
-        <table className="w-full border-collapse">
-          <thead>
-            <tr>
-              {["nodo", "g(n)", "h(n)", "f(n)"].map((header) => (
-                <th
-                  key={header}
-                  className="border-b py-1 text-center font-mono text-[9px]"
-                  style={{ borderColor: theme.border, color: theme.dimText }}
-                >
-                  {header}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
+function MetricCard({
+  label,
+  value,
+  theme,
+  accent,
+}: {
+  label: string;
+  value: string;
+  theme: GraphTheme;
+  accent: string;
+}) {
+  return (
+    <div
+      className="rounded-[8px] border px-3 py-2"
+      style={{ borderColor: theme.border, backgroundColor: theme.panelSurfaceAlt }}
+    >
+      <div className="font-mono text-[10px]" style={{ color: theme.mutedText }}>
+        {label}
+      </div>
+      <div className="mt-1 font-mono text-[15px] font-semibold" style={{ color: accent }}>
+        {value}
+      </div>
+    </div>
+  );
+}
+
+function CostTable({
+  rows,
+  theme,
+}: {
+  rows: AlgorithmCostRow[];
+  theme: GraphTheme;
+}) {
+  if (!rows.length) {
+    return (
+      <div
+        className="rounded-[8px] border px-3 py-2 font-mono text-[11px]"
+        style={{
+          borderColor: theme.border,
+          backgroundColor: theme.panelSurfaceAlt,
+          color: theme.mutedText,
+        }}
+      >
+        Sin nodos descubiertos todavía.
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className="overflow-hidden rounded-[8px] border"
+      style={{ borderColor: theme.border, backgroundColor: theme.panelSurfaceAlt }}
+    >
+      <table className="w-full border-collapse font-mono text-[11px]">
+        <thead>
+          <tr style={{ color: theme.mutedText }}>
+            <th className="border-b px-2 py-2 text-left" style={{ borderColor: theme.border }}>
+              nodo
+            </th>
+            <th className="border-b px-2 py-2 text-left" style={{ borderColor: theme.border }}>
+              g(n)
+            </th>
+            <th className="border-b px-2 py-2 text-left" style={{ borderColor: theme.border }}>
+              padre
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => (
+            <tr key={row.nodeId} style={{ color: theme.strongText }}>
+              <td className="border-b px-2 py-2" style={{ borderColor: `${theme.border}66` }}>
+                {row.nodeId}
+              </td>
               <td
-                colSpan={4}
-                className="border-b py-2 text-center font-mono text-[9px]"
-                style={{ borderColor: `${theme.border}80`, color: theme.dimText }}
+                className="border-b px-2 py-2"
+                style={{ borderColor: `${theme.border}66`, color: theme.accent }}
               >
-                — disponible cuando se implemente A* —
+                {row.g}
+              </td>
+              <td
+                className="border-b px-2 py-2"
+                style={{ borderColor: `${theme.border}66`, color: theme.secondaryText }}
+              >
+                {row.parent ?? "—"}
               </td>
             </tr>
-          </tbody>
-        </table>
-      </InfoCard>
-    </aside>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }

@@ -2,9 +2,11 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import AlgorithmPanel from "./AlgorithmPanel";
+import ElementActionMenu from "./ElementActionMenu";
 import ElementEditorModal from "./ElementEditorModal";
 import GraphCanvas from "./GraphCanvas";
 import GraphEditorPanel from "./GraphEditorPanel";
+import GraphTimeline from "./GraphTimeline";
 import StepControls from "./StepControls";
 import { algorithmOptions, runAlgorithm } from "@/lib/graph/algorithmSteps";
 import { sampleGraph } from "@/lib/graph/sampleGraph";
@@ -570,6 +572,46 @@ export default function GraphToolPage() {
     setCurrentStepIndex(0);
   }, [closeElementModal, goalNode, graph, selectedElement, startNode]);
 
+  useEffect(() => {
+    const shouldIgnoreKeyboardShortcut = (eventTarget: EventTarget | null) => {
+      if (!(eventTarget instanceof HTMLElement)) {
+        return false;
+      }
+
+      const tagName = eventTarget.tagName;
+      return (
+        eventTarget.isContentEditable ||
+        tagName === "INPUT" ||
+        tagName === "TEXTAREA" ||
+        tagName === "SELECT"
+      );
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (shouldIgnoreKeyboardShortcut(event.target)) {
+        return;
+      }
+
+      if (!selectedElement) {
+        return;
+      }
+
+      if (event.key === "Enter") {
+        event.preventDefault();
+        openElementModal(selectedElement);
+        return;
+      }
+
+      if (event.key === "Delete") {
+        event.preventDefault();
+        handleDeleteElement();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [handleDeleteElement, openElementModal, selectedElement]);
+
   const handleRun = useCallback(() => {
     if (!graph) {
       loadExample();
@@ -596,6 +638,14 @@ export default function GraphToolPage() {
     stopAutoPlay();
     setCurrentStepIndex(0);
   }, [stopAutoPlay]);
+
+  const handleSelectStep = useCallback(
+    (index: number) => {
+      stopAutoPlay();
+      setCurrentStepIndex(index);
+    },
+    [stopAutoPlay],
+  );
 
   const toggleAutoPlay = useCallback(() => {
     if (!steps.length) {
@@ -634,49 +684,63 @@ export default function GraphToolPage() {
       className="flex h-screen w-screen flex-col overflow-hidden rounded-[12px] border"
       style={{
         borderColor: theme.border,
-        backgroundColor: theme.appBg,
+        backgroundColor: theme.appBgDeep,
         color: theme.appText,
       }}
     >
       <header
-        className="flex items-center justify-between gap-3 border-b px-5 py-2.5"
+        className="grid grid-cols-[1fr_auto_1fr] items-center gap-4 border-b px-4 py-3"
         style={{ borderColor: theme.border, backgroundColor: theme.panelBg }}
       >
-        <div className="flex items-center gap-3">
-          <div className="font-mono text-[11px]" style={{ color: theme.mutedText }}>
-            diario48 / <span style={{ color: theme.accent }}>visualizador de grafos</span>
-          </div>
+        <div className="justify-self-start font-mono text-[14px]" style={{ color: theme.strongText }}>
+          diario48 <span style={{ color: theme.faintText, margin: "0 6px" }}>/</span>
+          <span style={{ color: theme.mutedText }}>visualizador de grafos</span>
+        </div>
 
-          <div className="flex gap-1">
-            {algorithmOptions.map((option) => (
+        <div
+          className="flex items-stretch gap-1 rounded-[8px] border p-1 justify-self-center"
+          style={{ borderColor: theme.border, backgroundColor: theme.panelSurface }}
+        >
+          {algorithmOptions.map((option) => {
+            const isActive = option.type === algorithm;
+
+            return (
               <button
-                key={option.type}
+                key={option.id}
                 type="button"
-                onClick={() => option.available && setAlgorithm(option.type)}
+                onClick={() => option.available && option.type && setAlgorithm(option.type)}
                 disabled={!option.available}
-                className={`rounded-[4px] border px-2.5 py-1 font-mono text-[10px] tracking-[0.3px] transition-all ${
+                className={`flex min-h-[44px] min-w-[58px] flex-col items-center justify-center rounded-[6px] border px-3 py-1.5 font-mono transition-all ${
                   !option.available ? "cursor-not-allowed opacity-35" : ""
                 }`}
                 style={
-                  option.type === algorithm
+                  isActive
                     ? {
-                        borderColor: `${theme.accent}55`,
+                        borderColor: theme.accent,
                         backgroundColor: theme.accentSoft,
-                        color: theme.accent,
+                        color: theme.strongText,
                       }
                     : {
-                        borderColor: theme.border,
+                        borderColor: "transparent",
                         color: theme.mutedText,
                       }
                 }
               >
-                {option.label}
+                <span className="text-[11px] leading-[1.05]">{option.label}</span>
+                {option.secondaryLabel ? (
+                  <span
+                    className="mt-[2px] text-[9px] leading-[1.05]"
+                    style={{ color: isActive ? theme.secondaryText : theme.faintText }}
+                  >
+                    {option.secondaryLabel}
+                  </span>
+                ) : null}
               </button>
-            ))}
-          </div>
+            );
+          })}
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 justify-self-end">
           <button
             type="button"
             onClick={() =>
@@ -685,7 +749,11 @@ export default function GraphToolPage() {
               )
             }
             className="rounded-[4px] border px-3 py-1.5 font-mono text-[10px] transition-all"
-            style={{ borderColor: theme.border, color: theme.accent }}
+            style={{
+              borderColor: theme.border,
+              color: theme.strongText,
+              backgroundColor: theme.panelSurface,
+            }}
           >
             {themeMode === "dark" ? "light mode" : "dark mode"}
           </button>
@@ -693,14 +761,18 @@ export default function GraphToolPage() {
             type="button"
             onClick={loadExample}
             className="rounded-[4px] border bg-transparent px-3 py-1.5 font-mono text-[10px] transition-all"
-            style={{ borderColor: theme.border, color: theme.mutedText }}
+            style={{
+              borderColor: theme.border,
+              color: theme.secondaryText,
+              backgroundColor: theme.panelSurface,
+            }}
           >
             cargar ejemplo
           </button>
         </div>
       </header>
 
-      <section className="grid flex-1 grid-cols-[240px_1fr_230px] overflow-hidden">
+      <section className="grid flex-1 grid-cols-[352px_1fr_320px] overflow-hidden">
         <GraphEditorPanel
           graph={graph}
           graphName={graphName}
@@ -744,29 +816,51 @@ export default function GraphToolPage() {
         />
 
         <div className="flex min-w-0 flex-col overflow-hidden border-x" style={{ borderColor: theme.border }}>
-          <GraphCanvas
-            graph={
-              graph
-                ? {
-                    ...graph,
-                    name: graphName.trim() || graph.name,
-                    description: graphDescription,
-                    startNode,
-                    goalNode,
-                  }
-                : null
-            }
-            step={currentStep}
-            themeMode={themeMode}
-            canvasBackground={theme.canvasBg}
-            gridColor={theme.gridColor}
-            dimText={theme.dimText}
-            borderColor={theme.border}
-            selectedElement={selectedElement}
-            onNodePositionChange={handleNodePositionChange}
-            onSelectElement={setSelectedElement}
-            onOpenElementModal={openElementModal}
+          <GraphTimeline
+            algorithm={algorithm}
+            steps={steps}
+            currentStepIndex={effectiveStepIndex}
+            theme={theme}
+            onSelectStep={handleSelectStep}
           />
+          <div className="relative flex-1 overflow-hidden">
+            <GraphCanvas
+              graph={
+                graph
+                  ? {
+                      ...graph,
+                      name: graphName.trim() || graph.name,
+                      description: graphDescription,
+                      startNode,
+                      goalNode,
+                    }
+                  : null
+              }
+              step={currentStep}
+              themeMode={themeMode}
+              canvasBackground={theme.canvasBg}
+              gridColor={theme.gridColor}
+              gridColorStrong={theme.gridColorStrong}
+              dimText={theme.dimText}
+              borderColor={theme.border}
+              startColor={theme.start}
+              goalColor={theme.goal}
+              currentColor={theme.danger}
+              frontierColor={theme.warning}
+              visitedColor={theme.accent}
+              selectedElement={selectedElement}
+              onNodePositionChange={handleNodePositionChange}
+              onSelectElement={setSelectedElement}
+            />
+            <ElementActionMenu
+              theme={theme}
+              selectedElement={selectedElement}
+              selectedNode={selectedNode}
+              selectedEdge={selectedEdge}
+              onEdit={() => openElementModal(selectedElement)}
+              onDelete={handleDeleteElement}
+            />
+          </div>
           <StepControls
             currentStepIndex={effectiveStepIndex}
             totalSteps={steps.length}
@@ -777,6 +871,7 @@ export default function GraphToolPage() {
             onPrevious={handlePrevious}
             onNext={handleNext}
             onReset={handleReset}
+            onSelectStep={handleSelectStep}
             onToggleAutoPlay={toggleAutoPlay}
           />
         </div>

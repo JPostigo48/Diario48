@@ -21,23 +21,27 @@ export default function SavedGraphsPanel({
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div
-        className="mb-1.5 font-mono text-[8px] uppercase tracking-[1.5px]"
-        style={{ color: theme.dimText }}
+        className="mb-2 font-mono text-[11px] uppercase tracking-[0.04em]"
+        style={{ color: theme.mutedText }}
       >
         {"// grafos guardados"}
       </div>
 
-      <div className="mb-2 flex items-center gap-2">
+      <div className="mb-3 flex items-center gap-2">
         <button
           type="button"
           onClick={onRefresh}
-          className="rounded-[4px] border px-2.5 py-1 font-mono text-[10px] transition-all"
-          style={{ borderColor: theme.border, color: theme.mutedText }}
+          className="rounded-[6px] border px-3 py-2 font-mono text-[12px] transition-all"
+          style={{
+            borderColor: theme.border,
+            color: theme.secondaryText,
+            backgroundColor: theme.panelSurface,
+          }}
         >
           recargar
         </button>
         {loading ? (
-          <span className="font-mono text-[9px]" style={{ color: theme.accent }}>
+          <span className="font-mono text-[11px]" style={{ color: theme.accent }}>
             cargando…
           </span>
         ) : null}
@@ -45,10 +49,10 @@ export default function SavedGraphsPanel({
 
       {message ? (
         <div
-          className="mb-2 rounded-[4px] border px-2.5 py-2 font-mono text-[9px] leading-[1.5]"
+          className="mb-3 rounded-[8px] border px-3 py-2 font-mono text-[11px] leading-[1.55]"
           style={{
-            borderColor: `${theme.accent}33`,
-            backgroundColor: theme.accentSoft,
+            borderColor: theme.border,
+            backgroundColor: theme.panelSurfaceAlt,
             color: theme.mutedText,
           }}
         >
@@ -59,11 +63,11 @@ export default function SavedGraphsPanel({
       <div className="d48-scrollbar flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto pr-1">
         {graphs.length === 0 && !loading ? (
           <div
-            className="rounded-[6px] border px-3 py-2.5 font-mono text-[10px]"
+            className="rounded-[8px] border px-3 py-3 font-mono text-[11px]"
             style={{
               borderColor: theme.border,
               backgroundColor: theme.panelSurface,
-              color: theme.dimText,
+              color: theme.mutedText,
             }}
           >
             No hay grafos guardados todavía.
@@ -75,18 +79,21 @@ export default function SavedGraphsPanel({
             key={graph.id}
             type="button"
             onClick={() => graph.id && onLoad(graph.id)}
-            className="rounded-[6px] border px-3 py-2.5 text-left transition-all"
+            className="rounded-[8px] border px-3 py-3 text-left transition-all hover:translate-y-[-1px]"
             style={{
               borderColor: theme.border,
               backgroundColor: theme.panelSurface,
             }}
           >
-            <div className="truncate font-mono text-[10px]" style={{ color: theme.strongText }}>
+            <div
+              className="truncate font-mono text-[12px] font-semibold"
+              style={{ color: theme.strongText }}
+            >
               {graph.name}
             </div>
             <div
-              className="mt-1 line-clamp-2 font-mono text-[9px] leading-[1.5]"
-              style={{ color: theme.mutedText }}
+              className="mt-1 line-clamp-2 font-sans text-[12px] leading-[1.5]"
+              style={{ color: theme.secondaryText }}
             >
               {graph.description || "Sin descripción"}
             </div>

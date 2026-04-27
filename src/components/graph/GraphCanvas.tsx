@@ -16,12 +16,17 @@ type GraphCanvasProps = {
   themeMode: GraphThemeMode;
   canvasBackground: string;
   gridColor: string;
+  gridColorStrong: string;
   dimText: string;
   borderColor: string;
+  startColor: string;
+  goalColor: string;
+  currentColor: string;
+  frontierColor: string;
+  visitedColor: string;
   selectedElement: SelectedGraphElement;
   onNodePositionChange: (nodeId: string, x: number, y: number) => void;
   onSelectElement: (element: SelectedGraphElement) => void;
-  onOpenElementModal: (element: SelectedGraphElement) => void;
 };
 
 export default function GraphCanvas({
@@ -30,12 +35,17 @@ export default function GraphCanvas({
   themeMode,
   canvasBackground,
   gridColor,
+  gridColorStrong,
   dimText,
   borderColor,
+  startColor,
+  goalColor,
+  currentColor,
+  frontierColor,
+  visitedColor,
   selectedElement,
   onNodePositionChange,
   onSelectElement,
-  onOpenElementModal,
 }: GraphCanvasProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const cyRef = useRef<Core | null>(null);
@@ -84,27 +94,10 @@ export default function GraphCanvas({
       return;
     }
 
-    const containerElement = containerRef.current;
-    const preventNativeContextMenu = (event: Event) => {
-      event.preventDefault();
-    };
-
-    containerElement.addEventListener(
-      "contextmenu",
-      preventNativeContextMenu,
-      true,
-    );
-
     if (!graph) {
       cyRef.current?.destroy();
       cyRef.current = null;
-      return () => {
-        containerElement.removeEventListener(
-          "contextmenu",
-          preventNativeContextMenu,
-          true,
-        );
-      };
+      return;
     }
 
     cyRef.current?.destroy();
@@ -120,21 +113,6 @@ export default function GraphCanvas({
       },
       autoungrabify: false,
       boxSelectionEnabled: false,
-    });
-
-    const contextTargets = [
-      containerElement,
-      ...(Array.from(
-        containerElement.querySelectorAll("canvas"),
-      ) as HTMLCanvasElement[]),
-    ];
-
-    contextTargets.forEach((targetElement) => {
-      targetElement.addEventListener(
-        "contextmenu",
-        preventNativeContextMenu,
-        true,
-      );
     });
 
     cy.on("dragfree", "node", (event) => {
@@ -153,18 +131,6 @@ export default function GraphCanvas({
       onSelectElement(currentSelection);
     });
 
-    cy.on("cxttap", "node, edge", (event) => {
-      event.originalEvent?.preventDefault?.();
-      const element = event.target;
-      const currentSelection = {
-        type: element.isNode() ? "node" : "edge",
-        id: element.id(),
-      } as Exclude<SelectedGraphElement, null>;
-
-      onSelectElement(currentSelection);
-      onOpenElementModal(currentSelection);
-    });
-
     cy.on("tap", (event) => {
       if (event.target === cy) {
         onSelectElement(null);
@@ -174,18 +140,6 @@ export default function GraphCanvas({
     cyRef.current = cy;
 
     return () => {
-      containerElement.removeEventListener(
-        "contextmenu",
-        preventNativeContextMenu,
-        true,
-      );
-      contextTargets.forEach((targetElement) => {
-        targetElement.removeEventListener(
-          "contextmenu",
-          preventNativeContextMenu,
-          true,
-        );
-      });
       cy.destroy();
       if (cyRef.current === cy) {
         cyRef.current = null;
@@ -195,21 +149,20 @@ export default function GraphCanvas({
     elements,
     graph,
     onNodePositionChange,
-    onOpenElementModal,
     onSelectElement,
     themeMode,
   ]);
 
   return (
     <div
-      className="relative flex-1 overflow-hidden"
+      className="relative h-full w-full overflow-hidden"
       style={{ backgroundColor: canvasBackground }}
     >
       <div
         className="absolute inset-0"
         style={{
-          backgroundImage: `linear-gradient(${gridColor} 1px, transparent 1px), linear-gradient(90deg, ${gridColor} 1px, transparent 1px)`,
-          backgroundSize: "28px 28px",
+          backgroundImage: `linear-gradient(${gridColor} 1px, transparent 1px), linear-gradient(90deg, ${gridColor} 1px, transparent 1px), linear-gradient(${gridColorStrong} 1px, transparent 1px), linear-gradient(90deg, ${gridColorStrong} 1px, transparent 1px)`,
+          backgroundSize: "20px 20px, 20px 20px, 100px 100px, 100px 100px",
         }}
       />
 
@@ -227,6 +180,56 @@ export default function GraphCanvas({
       ) : null}
 
       <div ref={containerRef} className="relative z-10 h-full w-full" />
+
+      {graph ? (
+        <div
+          className="pointer-events-none absolute bottom-4 left-4 z-20 rounded-[10px] border px-3 py-2"
+          style={{
+            borderColor: borderColor,
+            backgroundColor:
+              themeMode === "dark"
+                ? "rgba(20, 24, 34, 0.84)"
+                : "rgba(255, 255, 255, 0.9)",
+            color: dimText,
+          }}
+        >
+          <div className="flex flex-wrap items-center gap-3 font-mono text-[10px]">
+            <LegendDot color={startColor} ring label="inicio" />
+            <LegendDot color={goalColor} ring label="objetivo" />
+            <LegendDot color={currentColor} filled label="actual" />
+            <LegendDot color={frontierColor} label="frontera" />
+            <LegendDot color={visitedColor} label="visitado" />
+          </div>
+        </div>
+      ) : null}
     </div>
+  );
+}
+
+function LegendDot({
+  color,
+  label,
+  ring = false,
+  filled = false,
+}: {
+  color: string;
+  label: string;
+  ring?: boolean;
+  filled?: boolean;
+}) {
+  return (
+    <span className="inline-flex items-center gap-1.5">
+      <span
+        className="inline-block rounded-full border"
+        style={{
+          width: 10,
+          height: 10,
+          borderColor: color,
+          backgroundColor: filled ? color : "transparent",
+          boxShadow: ring ? `0 0 0 2px ${color}55` : "none",
+        }}
+      />
+      {label}
+    </span>
   );
 }

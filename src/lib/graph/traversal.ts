@@ -26,6 +26,16 @@ export function findNeighbors(graph: GraphData, nodeId: string) {
     }));
 }
 
+export function findWeightedNeighbors(graph: GraphData, nodeId: string) {
+  return graph.edges
+    .filter((edge) => edge.source === nodeId || edge.target === nodeId)
+    .map((edge) => ({
+      edgeId: edge.id,
+      neighbor: edge.source === nodeId ? edge.target : edge.source,
+      weight: typeof edge.weight === "number" ? edge.weight : 1,
+    }));
+}
+
 export function reconstructPath(
   parentMap: Record<string, string | null>,
   goalId: string,

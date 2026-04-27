@@ -1,6 +1,7 @@
 export type AlgorithmType =
   | "bfs"
   | "dfs"
+  | "uniform-cost"
   | "greedy-best-first"
   | "astar"
   | "graph-coloring";
@@ -53,11 +54,22 @@ export interface AlgorithmStep {
   path: string[];
   nodeStates: Record<string, NodeVisualState>;
   edgeStates: Record<string, EdgeVisualState>;
+  costRows?: AlgorithmCostRow[];
+}
+
+export interface AlgorithmCostRow {
+  nodeId: string;
+  g: number;
+  h?: number;
+  f?: number;
+  parent?: string | null;
 }
 
 export interface AlgorithmOption {
-  type: AlgorithmType;
+  id: string;
+  type?: AlgorithmType;
   label: string;
+  secondaryLabel?: string;
   available: boolean;
 }
 

@@ -44,6 +44,54 @@ type GraphEditorPanelProps = {
   onEnableMetadataEditing: () => void;
 };
 
+function SectionLabel({
+  title,
+  hint,
+  theme,
+}: {
+  title: string;
+  hint?: string;
+  theme: GraphTheme;
+}) {
+  return (
+    <div className="mb-2 flex items-baseline justify-between gap-2">
+      <span
+        className="font-mono text-[11px] uppercase tracking-[0.04em]"
+        style={{ color: theme.mutedText }}
+      >
+        {`// ${title}`}
+      </span>
+      {hint ? (
+        <span className="font-mono text-[11px]" style={{ color: theme.faintText }}>
+          {hint}
+        </span>
+      ) : null}
+    </div>
+  );
+}
+
+function PanelCard({
+  children,
+  theme,
+  footer = false,
+}: {
+  children: React.ReactNode;
+  theme: GraphTheme;
+  footer?: boolean;
+}) {
+  return (
+    <div
+      className={`rounded-[10px] border p-3 ${footer ? "" : ""}`}
+      style={{
+        borderColor: theme.border,
+        backgroundColor: theme.panelBg,
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
 function TextInput({
   value,
   onChange,
@@ -62,7 +110,7 @@ function TextInput({
       value={value}
       onChange={(event) => onChange(event.target.value)}
       placeholder={placeholder}
-      className={`w-full rounded-[4px] border px-2 py-1.5 font-mono text-[11px] outline-none transition-colors ${className}`}
+      className={`w-full rounded-[6px] border px-3 py-2 font-mono text-[13px] outline-none transition-colors ${className}`}
       style={{
         borderColor: theme.border,
         backgroundColor: theme.panelSurface,
@@ -87,7 +135,7 @@ function SelectInput({
     <select
       value={value}
       onChange={(event) => onChange(event.target.value)}
-      className="w-full rounded-[4px] border px-2 py-1.5 font-mono text-[11px] outline-none"
+      className="w-full rounded-[6px] border px-3 py-2 font-mono text-[13px] outline-none"
       style={{
         borderColor: theme.border,
         backgroundColor: theme.panelSurface,
@@ -101,6 +149,29 @@ function SelectInput({
         </option>
       ))}
     </select>
+  );
+}
+
+function TonePill({
+  value,
+  color,
+  softColor,
+}: {
+  value: string;
+  color: string;
+  softColor: string;
+}) {
+  return (
+    <span
+      className="rounded-[4px] border px-2 py-0.5 font-mono text-[11px] font-semibold"
+      style={{
+        borderColor: `${color}55`,
+        backgroundColor: softColor,
+        color,
+      }}
+    >
+      {value}
+    </span>
   );
 }
 
@@ -118,7 +189,7 @@ function PlusStyleIconButton({
       type="button"
       onClick={onClick}
       aria-label={label}
-      className="rounded-[4px] border px-2.5 py-1.5 font-mono text-[11px] font-bold transition-colors"
+      className="rounded-[6px] border px-2.5 py-2 font-mono text-[12px] font-bold transition-colors"
       style={{
         borderColor: `${theme.accent}55`,
         backgroundColor: theme.accentSoft,
@@ -126,6 +197,29 @@ function PlusStyleIconButton({
       }}
     >
       ✎
+    </button>
+  );
+}
+
+function PrimaryAddButton({
+  onClick,
+  theme,
+}: {
+  onClick: () => void;
+  theme: GraphTheme;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="rounded-[6px] border px-3 py-2 font-mono text-[14px] font-bold transition-colors"
+      style={{
+        borderColor: `${theme.accent}55`,
+        backgroundColor: theme.accentSoft,
+        color: theme.accent,
+      }}
+    >
+      +
     </button>
   );
 }
@@ -146,24 +240,25 @@ function ActionButton({
   disabled?: boolean;
 }) {
   let borderColor = theme.border;
-  let color = theme.mutedText;
-  let backgroundColor = "transparent";
+  let color = theme.strongText;
+  let backgroundColor = theme.panelSurface;
 
   if (accent) {
-    borderColor = `${theme.accent}33`;
-    color = theme.accent;
-    backgroundColor = theme.accentSoft;
+    borderColor = theme.accent;
+    color = "#ffffff";
+    backgroundColor = theme.accent;
   }
 
   if (danger) {
-    borderColor = `${theme.danger}33`;
-    color = `${theme.danger}bb`;
+    borderColor = theme.border;
+    color = theme.mutedText;
+    backgroundColor = "transparent";
   }
 
   if (disabled) {
     borderColor = theme.border;
     color = theme.dimText;
-    backgroundColor = "transparent";
+    backgroundColor = theme.panelSurface;
   }
 
   return (
@@ -171,7 +266,7 @@ function ActionButton({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className="w-full rounded-[4px] border px-2.5 py-2 text-left font-mono text-[10px] transition-all disabled:cursor-not-allowed disabled:opacity-100"
+      className="w-full rounded-[6px] border px-3 py-2.5 text-left font-mono text-[12px] transition-all disabled:cursor-not-allowed disabled:opacity-100"
       style={{ borderColor, color, backgroundColor }}
     >
       {children}
@@ -222,42 +317,40 @@ export default function GraphEditorPanel({
 }: GraphEditorPanelProps) {
   const nodeOptions = graph?.nodes.map((node) => node.id) ?? [];
   const isLoadedGraph = Boolean(loadedGraphId);
+  const graphStats = graph
+    ? `${graph.nodes.length} nodos · ${graph.edges.length} aristas`
+    : "borrador vacío";
 
   return (
     <>
       <aside
         className="d48-scrollbar flex min-h-0 flex-col gap-3 overflow-y-auto p-3.5"
-        style={{ backgroundColor: theme.panelBg }}
+        style={{ backgroundColor: theme.panelSurface }}
       >
-        <div>
-          <div
-            className="mb-1.5 font-mono text-[8px] uppercase tracking-[1.5px]"
-            style={{ color: theme.dimText }}
-          >
-            {"// grafo"}
-          </div>
+        <PanelCard theme={theme}>
+          <SectionLabel title="grafo" hint={isLoadedGraph ? "cargado" : "nuevo"} theme={theme} />
 
           {isLoadedGraph && !isMetadataEditing ? (
             <div
-              className="rounded-[6px] border p-2.5"
+              className="rounded-[8px] border p-3"
               style={{
                 borderColor: theme.border,
-                backgroundColor: theme.panelSurface,
+                backgroundColor: theme.panelSurfaceAlt,
               }}
             >
-              <div className="mb-2 flex items-start justify-between gap-2">
+              <div className="mb-3 flex items-start justify-between gap-2">
                 <div className="min-w-0">
                   <div
-                    className="truncate font-mono text-[12px] font-semibold"
+                    className="truncate font-mono text-[13px] font-semibold"
                     style={{ color: theme.strongText }}
                   >
                     {graphName || "Sin título"}
                   </div>
                   <div
-                    className="mt-1 font-mono text-[9px] uppercase tracking-[1.2px]"
-                    style={{ color: theme.dimText }}
+                    className="mt-1 font-sans text-[12px]"
+                    style={{ color: theme.mutedText }}
                   >
-                    grafo cargado
+                    {graphStats}
                   </div>
                 </div>
 
@@ -269,14 +362,14 @@ export default function GraphEditorPanel({
               </div>
 
               <div
-                className="font-mono text-[10px] leading-[1.6]"
-                style={{ color: theme.mutedText }}
+                className="font-sans text-[13px] leading-[1.55]"
+                style={{ color: theme.secondaryText }}
               >
                 {graphDescription || "Sin descripción"}
               </div>
             </div>
           ) : (
-            <div className="space-y-1.5">
+            <div className="space-y-2">
               <TextInput
                 value={graphName}
                 onChange={onGraphNameChange}
@@ -287,129 +380,87 @@ export default function GraphEditorPanel({
                 value={graphDescription}
                 onChange={(event) => onGraphDescriptionChange(event.target.value)}
                 placeholder="descripción"
-                rows={2}
-                className="w-full resize-none rounded-[4px] border px-2 py-1.5 font-mono text-[11px] outline-none transition-colors"
+                rows={3}
+                className="w-full resize-none rounded-[6px] border px-3 py-2 font-sans text-[13px] outline-none transition-colors"
                 style={{
                   borderColor: theme.border,
                   backgroundColor: theme.panelSurface,
                   color: theme.strongText,
                 }}
               />
+              <div className="font-mono text-[11px]" style={{ color: theme.faintText }}>
+                {graphStats}
+              </div>
             </div>
           )}
-        </div>
+        </PanelCard>
 
-        <hr style={{ borderColor: theme.border }} />
-
-        <div>
-          <div
-            className="mb-1.5 font-mono text-[8px] uppercase tracking-[1.5px]"
-            style={{ color: theme.dimText }}
-          >
-            {"// nodo"}
-          </div>
-          <div className="space-y-1.5">
-            <div className="flex gap-1.5">
-              <TextInput
-                value={nodeId}
-                onChange={onNodeIdChange}
-                placeholder="ID"
-                theme={theme}
-                className="max-w-[62px]"
-              />
-              <TextInput
-                value={nodeLabel}
-                onChange={onNodeLabelChange}
-                placeholder="etiqueta"
-                theme={theme}
-              />
-            </div>
-            <div className="flex gap-1.5">
+        <PanelCard theme={theme}>
+          <SectionLabel title="nodos" hint="agregar" theme={theme} />
+          <div className="grid grid-cols-[76px_1fr] gap-2">
+            <TextInput
+              value={nodeId}
+              onChange={onNodeIdChange}
+              placeholder="ID"
+              theme={theme}
+            />
+            <TextInput
+              value={nodeLabel}
+              onChange={onNodeLabelChange}
+              placeholder="etiqueta"
+              theme={theme}
+            />
+            <div className="col-span-2 flex gap-2">
               <TextInput
                 value={nodeHeuristic}
                 onChange={onNodeHeuristicChange}
-                placeholder="heurística"
+                placeholder="heurística h(n)"
                 theme={theme}
                 className="flex-1"
               />
-              <button
-                type="button"
-                onClick={onAddNode}
-                className="rounded-[4px] border px-2.5 py-1.5 font-mono text-[11px] font-bold transition-colors"
-                style={{
-                  borderColor: `${theme.accent}55`,
-                  backgroundColor: theme.accentSoft,
-                  color: theme.accent,
-                }}
-              >
-                +
-              </button>
+              <PrimaryAddButton onClick={onAddNode} theme={theme} />
             </div>
           </div>
-        </div>
+        </PanelCard>
 
-        <hr style={{ borderColor: theme.border }} />
-
-        <div>
-          <div
-            className="mb-1.5 font-mono text-[8px] uppercase tracking-[1.5px]"
-            style={{ color: theme.dimText }}
-          >
-            {"// arista"}
-          </div>
-          <div className="space-y-1.5">
-            <div className="flex gap-1.5">
-              <TextInput
-                value={edgeSource}
-                onChange={onEdgeSourceChange}
-                placeholder="src"
-                theme={theme}
-              />
-              <TextInput
-                value={edgeTarget}
-                onChange={onEdgeTargetChange}
-                placeholder="dst"
-                theme={theme}
-              />
-            </div>
-            <div className="flex gap-1.5">
+        <PanelCard theme={theme}>
+          <SectionLabel title="aristas" hint="agregar" theme={theme} />
+          <div className="grid grid-cols-3 gap-2">
+            <TextInput
+              value={edgeSource}
+              onChange={onEdgeSourceChange}
+              placeholder="src"
+              theme={theme}
+            />
+            <TextInput
+              value={edgeTarget}
+              onChange={onEdgeTargetChange}
+              placeholder="dst"
+              theme={theme}
+            />
+            <div className="flex gap-2">
               <TextInput
                 value={edgeWeight}
                 onChange={onEdgeWeightChange}
                 placeholder="peso"
                 theme={theme}
-                className="max-w-[72px]"
+                className="flex-1"
               />
-              <button
-                type="button"
-                onClick={onAddEdge}
-                className="rounded-[4px] border px-2.5 py-1.5 font-mono text-[11px] font-bold transition-colors"
-                style={{
-                  borderColor: `${theme.accent}55`,
-                  backgroundColor: theme.accentSoft,
-                  color: theme.accent,
-                }}
-              >
-                +
-              </button>
+              <PrimaryAddButton onClick={onAddEdge} theme={theme} />
             </div>
           </div>
-        </div>
+        </PanelCard>
 
-        <hr style={{ borderColor: theme.border }} />
+        <PanelCard theme={theme}>
+          <SectionLabel title="configuración" theme={theme} />
 
-        <div>
-          <div
-            className="mb-1.5 font-mono text-[8px] uppercase tracking-[1.5px]"
-            style={{ color: theme.dimText }}
-          >
-            {"// configuración"}
-          </div>
-
-          <div className="space-y-1.5">
+          <div className="space-y-3">
             <div>
-              <div className="mb-1 font-mono text-[10px]" style={{ color: theme.mutedText }}>
-                nodo inicial
+              <div className="mb-1 flex items-center justify-between gap-2">
+                <span className="font-mono text-[12px]" style={{ color: theme.secondaryText }}>
+                  inicio
+                </span>
+                <TonePill value={startNode || "—"} color={theme.start} softColor={theme.accentSoft} />
               </div>
               <SelectInput
                 value={startNode}
@@ -418,9 +469,13 @@ export default function GraphEditorPanel({
                 theme={theme}
               />
             </div>
+
             <div>
-              <div className="mb-1 font-mono text-[10px]" style={{ color: theme.mutedText }}>
-                nodo objetivo
+              <div className="mb-1 flex items-center justify-between gap-2">
+                <span className="font-mono text-[12px]" style={{ color: theme.secondaryText }}>
+                  objetivo
+                </span>
+                <TonePill value={goalNode || "—"} color={theme.goal} softColor={theme.pathSoft} />
               </div>
               <SelectInput
                 value={goalNode}
@@ -429,64 +484,63 @@ export default function GraphEditorPanel({
                 theme={theme}
               />
             </div>
-            <div>
-              <div className="mb-1 font-mono text-[10px]" style={{ color: theme.mutedText }}>
-                heurística h(n) — A*
-              </div>
-              <div
-                className="rounded-[4px] border px-2 py-1.5 font-mono text-[9px]"
-                style={{
-                  borderColor: theme.border,
-                  backgroundColor: theme.panelSurface,
-                  color: theme.mutedText,
-                }}
-              >
-                Se edita nodo por nodo desde el formulario superior.
-              </div>
+
+            <div
+              className="rounded-[8px] border px-3 py-2 font-mono text-[11px] leading-[1.55]"
+              style={{
+                borderColor: theme.border,
+                backgroundColor: theme.panelSurfaceAlt,
+                color: theme.mutedText,
+              }}
+            >
+              <span style={{ color: theme.secondaryText }}>h(n)</span> · se edita nodo por nodo
+              desde el formulario superior.
+              <br />
+              <span style={{ color: theme.faintText }}>Se usa en A* y Greedy.</span>
             </div>
           </div>
-        </div>
+        </PanelCard>
 
-        <hr style={{ borderColor: theme.border }} />
-
-        <div className="space-y-1.5">
-          <ActionButton onClick={onOpenLoadModal} theme={theme}>
-            cargar grafo
-          </ActionButton>
-          <ActionButton
-            onClick={onUpdateGraph}
-            theme={theme}
-            accent
-            disabled={!isLoadedGraph}
-          >
-            actualizar grafo
-          </ActionButton>
-          <ActionButton onClick={onSaveNewGraph} theme={theme} accent>
-            guardar grafo
-          </ActionButton>
-          <ActionButton onClick={onClearGraph} theme={theme} danger>
-            limpiar pantalla
-          </ActionButton>
-        </div>
-
-        {saveMessage ? (
-          <div
-            className="rounded-[4px] border px-2.5 py-2 font-mono text-[9px] leading-[1.5]"
-            style={{
-              borderColor: theme.border,
-              backgroundColor: theme.panelSurface,
-              color: theme.mutedText,
-            }}
-          >
-            {saveMessage}
+        <PanelCard theme={theme} footer>
+          <div className="space-y-2">
+            <ActionButton onClick={onOpenLoadModal} theme={theme}>
+              cargar grafo
+            </ActionButton>
+            <ActionButton
+              onClick={onUpdateGraph}
+              theme={theme}
+              accent
+              disabled={!isLoadedGraph}
+            >
+              actualizar grafo
+            </ActionButton>
+            <ActionButton onClick={onSaveNewGraph} theme={theme}>
+              guardar grafo
+            </ActionButton>
+            <ActionButton onClick={onClearGraph} theme={theme} danger>
+              limpiar pantalla
+            </ActionButton>
           </div>
-        ) : null}
+
+          {saveMessage ? (
+            <div
+              className="mt-3 rounded-[8px] border px-3 py-2 font-mono text-[11px] leading-[1.55]"
+              style={{
+                borderColor: theme.border,
+                backgroundColor: theme.panelSurfaceAlt,
+                color: theme.mutedText,
+              }}
+            >
+              {saveMessage}
+            </div>
+          ) : null}
+        </PanelCard>
       </aside>
 
       {isLoadModalOpen ? (
         <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/45 p-6">
           <div
-            className="flex h-[min(78vh,680px)] w-[min(520px,100%)] flex-col rounded-[10px] border p-4 shadow-2xl"
+            className="flex h-[min(78vh,680px)] w-[min(560px,100%)] flex-col rounded-[12px] border p-4 shadow-2xl"
             style={{
               borderColor: theme.border,
               backgroundColor: theme.panelBg,
@@ -495,13 +549,13 @@ export default function GraphEditorPanel({
             <div className="mb-3 flex items-center justify-between gap-3">
               <div>
                 <div
-                  className="font-mono text-[8px] uppercase tracking-[1.5px]"
-                  style={{ color: theme.dimText }}
+                  className="font-mono text-[11px] uppercase tracking-[0.04em]"
+                  style={{ color: theme.mutedText }}
                 >
                   {"// cargar grafo"}
                 </div>
                 <div
-                  className="mt-1 font-mono text-[12px] font-semibold"
+                  className="mt-1 font-mono text-[14px] font-semibold"
                   style={{ color: theme.strongText }}
                 >
                   Grafos guardados
@@ -511,10 +565,11 @@ export default function GraphEditorPanel({
               <button
                 type="button"
                 onClick={onCloseLoadModal}
-                className="rounded-[4px] border px-2.5 py-1.5 font-mono text-[11px] transition-colors"
+                className="rounded-[6px] border px-3 py-2 font-mono text-[12px] transition-colors"
                 style={{
                   borderColor: theme.border,
-                  color: theme.mutedText,
+                  color: theme.secondaryText,
+                  backgroundColor: theme.panelSurface,
                 }}
               >
                 cerrar
