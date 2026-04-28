@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
+import ThemeSwitcher from "@/components/ui/ThemeSwitcher";
 import AlgorithmPanel from "./AlgorithmPanel";
 import ElementActionMenu from "./ElementActionMenu";
 import ElementEditorModal from "./ElementEditorModal";
@@ -35,6 +37,24 @@ const EMPTY_GRAPH_NAME = "";
 export default function GraphToolPage() {
   const [algorithm, setAlgorithm] = useState<AlgorithmType>("bfs");
   const [themeMode, setThemeMode] = useState<GraphThemeMode>("dark");
+
+  // Lee la preferencia guardada una sola vez al montar (sin sobrescribir localStorage)
+  useEffect(() => {
+    const saved = localStorage.getItem("d48-theme");
+    if (saved === "light" || saved === "dark") {
+      setThemeMode(saved);
+      document.documentElement.setAttribute("data-theme", saved);
+    }
+  }, []);
+
+  const toggleTheme = useCallback(() => {
+    setThemeMode((current) => {
+      const next = current === "dark" ? "light" : "dark";
+      localStorage.setItem("d48-theme", next);
+      document.documentElement.setAttribute("data-theme", next);
+      return next;
+    });
+  }, []);
   const [graph, setGraph] = useState<GraphData | null>(null);
   const [graphName, setGraphName] = useState(EMPTY_GRAPH_NAME);
   const [graphDescription, setGraphDescription] = useState("");
@@ -692,10 +712,15 @@ export default function GraphToolPage() {
         className="grid grid-cols-[1fr_auto_1fr] items-center gap-4 border-b px-4 py-3"
         style={{ borderColor: theme.border, backgroundColor: theme.panelBg }}
       >
-        <div className="justify-self-start font-mono text-[14px]" style={{ color: theme.strongText }}>
-          diario48 <span style={{ color: theme.faintText, margin: "0 6px" }}>/</span>
-          <span style={{ color: theme.mutedText }}>visualizador de grafos</span>
-        </div>
+        <Link
+          href="/"
+          className="justify-self-start font-mono text-[17px] font-bold hover:opacity-75 transition-opacity"
+          style={{ color: theme.strongText, textDecoration: "none" }}
+        >
+          Diario<span style={{ color: theme.accent }}>48</span>
+          <span style={{ color: theme.faintText, margin: "0 8px", fontSize: "14px", fontWeight: 400 }}>/</span>
+          <span style={{ color: theme.mutedText, fontSize: "13px", fontWeight: 400 }}>visualizador de grafos</span>
+        </Link>
 
         <div
           className="flex items-stretch gap-1 rounded-[8px] border p-1 justify-self-center"
@@ -743,22 +768,6 @@ export default function GraphToolPage() {
         <div className="flex items-center gap-2 justify-self-end">
           <button
             type="button"
-            onClick={() =>
-              setThemeMode((currentMode) =>
-                currentMode === "dark" ? "light" : "dark",
-              )
-            }
-            className="rounded-[4px] border px-3 py-1.5 font-mono text-[10px] transition-all"
-            style={{
-              borderColor: theme.border,
-              color: theme.strongText,
-              backgroundColor: theme.panelSurface,
-            }}
-          >
-            {themeMode === "dark" ? "light mode" : "dark mode"}
-          </button>
-          <button
-            type="button"
             onClick={loadExample}
             className="rounded-[4px] border bg-transparent px-3 py-1.5 font-mono text-[10px] transition-all"
             style={{
@@ -769,6 +778,7 @@ export default function GraphToolPage() {
           >
             cargar ejemplo
           </button>
+          <ThemeSwitcher theme={themeMode} onToggle={toggleTheme} />
         </div>
       </header>
 

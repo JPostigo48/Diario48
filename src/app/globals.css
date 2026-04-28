@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
 :root {
+  /* Graph tool variables (legacy) */
   --d48-bg: #090a0d;
   --d48-bg-soft: #0a0b0e;
   --d48-panel: #0c0d11;
@@ -18,6 +19,43 @@
   --d48-current: #ef4444;
   --d48-path: #8b5cf6;
   --d48-goal: #a78bfa;
+
+  /* Landing system — dark mode (default) */
+  --bg: #090a0d;
+  --bg2: #0c0d11;
+  --bg3: #111318;
+  --bg4: #13151e;
+  --br: #1a1d28;
+  --br2: #2a3040;
+  --tx: #dde1ea;
+  --tx2: #9ca3af;
+  --tx3: #4b5563;
+  --tx4: #2a3040;
+  --acc: #4f8ef7;
+  --acc2: #4f8ef718;
+  --acc3: #4f8ef755;
+  --green: #22c55e;
+  --amber: #f59e0b;
+  --purple: #a78bfa;
+}
+
+:root[data-theme="light"] {
+  --bg: #f8f9fc;
+  --bg2: #ffffff;
+  --bg3: #f1f3f9;
+  --bg4: #e8ebf5;
+  --br: #dde1ea;
+  --br2: #c4cad8;
+  --tx: #0f1117;
+  --tx2: #374151;
+  --tx3: #6b7280;
+  --tx4: #9ca3af;
+  --acc: #2563eb;
+  --acc2: #2563eb12;
+  --acc3: #2563eb44;
+  --green: #16a34a;
+  --amber: #d97706;
+  --purple: #7c3aed;
 }
 
 @theme inline {
