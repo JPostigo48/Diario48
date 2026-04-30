@@ -27,6 +27,7 @@ const GraphSchema = new Schema(
     name: { type: String, required: true, trim: true },
     description: { type: String, default: "", trim: true },
     isPublic: { type: Boolean, default: true },
+    isDirected: { type: Boolean, default: false },
     nodes: { type: [GraphNodeSchema], required: true, default: [] },
     edges: { type: [GraphEdgeSchema], required: true, default: [] },
     startNode: { type: String, required: false, trim: true },
@@ -41,6 +42,7 @@ export interface GraphDocument extends mongoose.Document {
   name: string;
   description?: string;
   isPublic: boolean;
+  isDirected: boolean;
   nodes: {
     id: string;
     label: string;

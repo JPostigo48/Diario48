@@ -4,7 +4,8 @@ export type AlgorithmType =
   | "uniform-cost"
   | "greedy-best-first"
   | "astar"
-  | "graph-coloring";
+  | "graph-coloring"
+  | "ant-colony";
 
 export type NodeVisualState =
   | "unvisited"
@@ -35,6 +36,7 @@ export interface GraphData {
   name: string;
   description?: string;
   isPublic: boolean;
+  isDirected: boolean;
   nodes: GraphNode[];
   edges: GraphEdge[];
   startNode?: string;
@@ -55,6 +57,8 @@ export interface AlgorithmStep {
   nodeStates: Record<string, NodeVisualState>;
   edgeStates: Record<string, EdgeVisualState>;
   costRows?: AlgorithmCostRow[];
+  detailTable?: AlgorithmDetailTable;
+  nodeVisuals?: Record<string, AlgorithmNodeVisual>;
 }
 
 export interface AlgorithmCostRow {
@@ -63,6 +67,18 @@ export interface AlgorithmCostRow {
   h?: number;
   f?: number;
   parent?: string | null;
+}
+
+export interface AlgorithmDetailTable {
+  title: string;
+  columns: string[];
+  rows: Array<Array<string | number>>;
+}
+
+export interface AlgorithmNodeVisual {
+  fillColor: string;
+  borderColor?: string;
+  textColor?: string;
 }
 
 export interface AlgorithmOption {

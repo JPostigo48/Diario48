@@ -1,5 +1,9 @@
 import { runBfs } from "./bfs";
 import { runDfs } from "./dfs";
+import { runAStar } from "./astar";
+import { runAntColony } from "./antColony";
+import { runGreedyBestFirst } from "./greedyBestFirst";
+import { runGreedyColoring } from "./greedyColoring";
 import { runUniformCost } from "./uniformCost";
 import type { AlgorithmOption, AlgorithmStep, AlgorithmType, GraphData } from "./types";
 
@@ -15,28 +19,31 @@ export const algorithmOptions: AlgorithmOption[] = [
   },
   {
     id: "best-first",
+    type: "greedy-best-first",
     label: "Best",
     secondaryLabel: "First",
-    available: false,
+    available: true,
   },
   {
     id: "astar",
     type: "astar",
     label: "A*",
     secondaryLabel: "estrella",
-    available: false,
+    available: true,
   },
   {
     id: "greedy-coloring",
+    type: "graph-coloring",
     label: "Greedy",
     secondaryLabel: "Coloring",
-    available: false,
+    available: true,
   },
   {
     id: "ant-colony",
-    label: "Ant",
-    secondaryLabel: "Col.",
-    available: false,
+    type: "ant-colony",
+    label: "AntCol",
+    secondaryLabel: "Coloring",
+    available: true,
   },
 ];
 
@@ -54,9 +61,13 @@ export function runAlgorithm(
     case "uniform-cost":
       return startNode ? runUniformCost(graph, startNode, goalNode) : [];
     case "astar":
+      return startNode ? runAStar(graph, startNode, goalNode) : [];
     case "greedy-best-first":
+      return startNode ? runGreedyBestFirst(graph, startNode, goalNode) : [];
     case "graph-coloring":
-      return [];
+      return runGreedyColoring(graph);
+    case "ant-colony":
+      return runAntColony(graph);
     default:
       return [];
   }

@@ -19,7 +19,11 @@ export function createEdgeStateMap(
 
 export function findNeighbors(graph: GraphData, nodeId: string) {
   return graph.edges
-    .filter((edge) => edge.source === nodeId || edge.target === nodeId)
+    .filter((edge) =>
+      graph.isDirected
+        ? edge.source === nodeId
+        : edge.source === nodeId || edge.target === nodeId,
+    )
     .map((edge) => ({
       edgeId: edge.id,
       neighbor: edge.source === nodeId ? edge.target : edge.source,
@@ -28,7 +32,11 @@ export function findNeighbors(graph: GraphData, nodeId: string) {
 
 export function findWeightedNeighbors(graph: GraphData, nodeId: string) {
   return graph.edges
-    .filter((edge) => edge.source === nodeId || edge.target === nodeId)
+    .filter((edge) =>
+      graph.isDirected
+        ? edge.source === nodeId
+        : edge.source === nodeId || edge.target === nodeId,
+    )
     .map((edge) => ({
       edgeId: edge.id,
       neighbor: edge.source === nodeId ? edge.target : edge.source,
@@ -60,7 +68,9 @@ export function createPathEdgeIds(graph: GraphData, path: string[]) {
     const edge = graph.edges.find(
       (candidate) =>
         (candidate.source === current && candidate.target === next) ||
-        (candidate.source === next && candidate.target === current),
+        (!graph.isDirected &&
+          candidate.source === next &&
+          candidate.target === current),
     );
 
     if (edge) {

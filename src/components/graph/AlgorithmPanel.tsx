@@ -1,6 +1,7 @@
 import type { GraphTheme } from "@/lib/graph/theme";
 import type {
   AlgorithmCostRow,
+  AlgorithmDetailTable,
   AlgorithmStep,
   AlgorithmType,
 } from "@/lib/graph/types";
@@ -93,17 +94,17 @@ function resolveEventTone(step: AlgorithmStep | null, theme: GraphTheme) {
   }
 
   const label = step.actionLabel.toLowerCase();
-  if (label.includes("objetivo")) {
+  if (label.includes("objetivo") || label.includes("mejor ruta") || label.includes("completado")) {
     return {
-      label: "found",
+      label: "resultado",
       color: theme.goal,
       backgroundColor: theme.pathSoft,
       borderColor: `${theme.goal}55`,
     };
   }
-  if (label.includes("procesando")) {
+  if (label.includes("procesando") || label.includes("coloreando") || label.includes("hormiga")) {
     return {
-      label: "visit",
+      label: "activo",
       color: theme.warning,
       backgroundColor: theme.warningSoft,
       borderColor: `${theme.warning}55`,
@@ -118,7 +119,7 @@ function resolveEventTone(step: AlgorithmStep | null, theme: GraphTheme) {
     };
   }
   return {
-    label: "expand",
+    label: "avance",
     color: theme.accent,
     backgroundColor: theme.accentSoft,
     borderColor: `${theme.accent}55`,
@@ -131,8 +132,25 @@ export default function AlgorithmPanel({
   theme,
 }: AlgorithmPanelProps) {
   const tone = resolveEventTone(step, theme);
-  const frontierLabel = algorithm === "dfs" ? "pila / frontera" : "cola / frontera";
+  const isColoringAlgorithm =
+    algorithm === "graph-coloring" || algorithm === "ant-colony";
+  const frontierLabel =
+    algorithm === "dfs"
+      ? "pila / frontera"
+      : isColoringAlgorithm
+        ? "pendientes"
+        : "cola / frontera";
   const isUniformCost = algorithm === "uniform-cost";
+  const hasCostTable =
+    algorithm === "uniform-cost" ||
+    algorithm === "astar" ||
+    algorithm === "greedy-best-first";
+  const hasDetailTable =
+    algorithm === "graph-coloring" || algorithm === "ant-colony";
+  const pathTitle = isColoringAlgorithm ? "cobertura actual" : "camino actual";
+  const detailTitle =
+    step?.detailTable?.title ??
+    (algorithm === "graph-coloring" ? "asignación de color" : "feromonas");
 
   return (
     <aside
@@ -190,13 +208,13 @@ export default function AlgorithmPanel({
             accent={theme.accent}
           />
           <MetricCard
-            label="frontera"
+            label={isColoringAlgorithm ? "pendientes" : "frontera"}
             value={String(step?.frontier.length ?? 0)}
             theme={theme}
             accent={theme.path}
           />
           <MetricCard
-            label="visitados"
+            label={isColoringAlgorithm ? "coloreados" : "visitados"}
             value={String(step?.visited.length ?? 0)}
             theme={theme}
             accent={theme.secondaryText}
@@ -218,7 +236,11 @@ export default function AlgorithmPanel({
         </div>
       </Section>
 
-      <Section title="visitados" hint={String(step?.visited.length ?? 0)} theme={theme}>
+      <Section
+        title={isColoringAlgorithm ? "coloreados" : "visitados"}
+        hint={String(step?.visited.length ?? 0)}
+        theme={theme}
+      >
         <div className="flex flex-wrap gap-1.5">
           {step?.visited.length ? (
             step.visited.map((nodeId) => (
@@ -232,7 +254,7 @@ export default function AlgorithmPanel({
         </div>
       </Section>
 
-      <Section title="camino actual" hint={step?.path.length ? "final" : "—"} theme={theme}>
+      <Section title={pathTitle} hint={step?.path.length ? "final" : "—"} theme={theme}>
         <div className="flex flex-wrap gap-1.5">
           {step?.path.length ? (
             step.path.map((nodeId) => (
@@ -240,24 +262,44 @@ export default function AlgorithmPanel({
             ))
           ) : (
             <span className="font-mono text-[11px]" style={{ color: theme.mutedText }}>
-              sin camino final · siga avanzando
+              {isColoringAlgorithm
+                ? "el coloreo no utiliza ruta final"
+                : "sin camino final · siga avanzando"}
             </span>
           )}
         </div>
       </Section>
 
+      {hasDetailTable ? (
+        <Section
+          title={detailTitle}
+          hint={`${step?.detailTable?.rows.length ?? 0} filas`}
+          theme={theme}
+        >
+          <DetailTable table={step?.detailTable} theme={theme} />
+        </Section>
+      ) : null}
+
       <Section
-        title={`costos · ${isUniformCost ? "g(n)" : algorithm === "astar" ? "A*" : "informado"}`}
-        hint={
+        title={`costos · ${
           isUniformCost
+            ? "g(n)"
+            : algorithm === "astar"
+              ? "A*"
+              : algorithm === "greedy-best-first"
+                ? "best-first"
+                : "informado"
+        }`}
+        hint={
+          hasCostTable
             ? `${step?.costRows?.length ?? 0} nodos`
-            : algorithm === "bfs" || algorithm === "dfs"
+            : algorithm === "bfs" || algorithm === "dfs" || hasDetailTable
               ? "no aplica"
               : "pendiente"
         }
         theme={theme}
       >
-        {isUniformCost ? (
+        {hasCostTable ? (
           <CostTable rows={step?.costRows ?? []} theme={theme} />
         ) : (
           <div
@@ -269,8 +311,10 @@ export default function AlgorithmPanel({
             }}
           >
             {algorithm === "bfs" || algorithm === "dfs"
-              ? "h(n) no se requiere para este algoritmo. Esta tabla se activará en A* y Greedy."
-              : "La tabla de costos quedará disponible cuando se implemente el algoritmo informado."}
+              ? "h(n) no se requiere para este algoritmo. Esta tabla se activa en A* y Best First."
+              : hasDetailTable
+                ? "Este algoritmo utiliza una tabla específica. Revisa la sección superior para ver colores o feromonas."
+                : "La tabla de costos quedará disponible cuando se implemente el algoritmo informado."}
           </div>
         )}
       </Section>
@@ -341,6 +385,12 @@ function CostTable({
               g(n)
             </th>
             <th className="border-b px-2 py-2 text-left" style={{ borderColor: theme.border }}>
+              h(n)
+            </th>
+            <th className="border-b px-2 py-2 text-left" style={{ borderColor: theme.border }}>
+              f(n)
+            </th>
+            <th className="border-b px-2 py-2 text-left" style={{ borderColor: theme.border }}>
               padre
             </th>
           </tr>
@@ -361,8 +411,81 @@ function CostTable({
                 className="border-b px-2 py-2"
                 style={{ borderColor: `${theme.border}66`, color: theme.secondaryText }}
               >
+                {typeof row.h === "number" ? row.h : "—"}
+              </td>
+              <td
+                className="border-b px-2 py-2"
+                style={{ borderColor: `${theme.border}66`, color: theme.path }}
+              >
+                {typeof row.f === "number" ? row.f : "—"}
+              </td>
+              <td
+                className="border-b px-2 py-2"
+                style={{ borderColor: `${theme.border}66`, color: theme.secondaryText }}
+              >
                 {row.parent ?? "—"}
               </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function DetailTable({
+  table,
+  theme,
+}: {
+  table?: AlgorithmDetailTable;
+  theme: GraphTheme;
+}) {
+  if (!table || !table.rows.length) {
+    return (
+      <div
+        className="rounded-[8px] border px-3 py-2 font-mono text-[11px]"
+        style={{
+          borderColor: theme.border,
+          backgroundColor: theme.panelSurfaceAlt,
+          color: theme.mutedText,
+        }}
+      >
+        Sin datos todavía.
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className="overflow-hidden rounded-[8px] border"
+      style={{ borderColor: theme.border, backgroundColor: theme.panelSurfaceAlt }}
+    >
+      <table className="w-full border-collapse font-mono text-[11px]">
+        <thead>
+          <tr style={{ color: theme.mutedText }}>
+            {table.columns.map((column) => (
+              <th
+                key={column}
+                className="border-b px-2 py-2 text-left"
+                style={{ borderColor: theme.border }}
+              >
+                {column}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {table.rows.map((row, rowIndex) => (
+            <tr key={`${table.title}-${rowIndex}`} style={{ color: theme.strongText }}>
+              {row.map((value, valueIndex) => (
+                <td
+                  key={`${table.title}-${rowIndex}-${valueIndex}`}
+                  className="border-b px-2 py-2"
+                  style={{ borderColor: `${theme.border}66` }}
+                >
+                  {value}
+                </td>
+              ))}
             </tr>
           ))}
         </tbody>

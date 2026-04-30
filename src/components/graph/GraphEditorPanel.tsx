@@ -12,6 +12,7 @@ type GraphEditorPanelProps = {
   edgeSource: string;
   edgeTarget: string;
   edgeWeight: string;
+  isDirected: boolean;
   startNode: string;
   goalNode: string;
   savedGraphs: GraphData[];
@@ -30,6 +31,7 @@ type GraphEditorPanelProps = {
   onEdgeSourceChange: (value: string) => void;
   onEdgeTargetChange: (value: string) => void;
   onEdgeWeightChange: (value: string) => void;
+  onIsDirectedChange: (value: boolean) => void;
   onStartNodeChange: (value: string) => void;
   onGoalNodeChange: (value: string) => void;
   onAddNode: () => void;
@@ -284,6 +286,7 @@ export default function GraphEditorPanel({
   edgeSource,
   edgeTarget,
   edgeWeight,
+  isDirected,
   startNode,
   goalNode,
   savedGraphs,
@@ -302,6 +305,7 @@ export default function GraphEditorPanel({
   onEdgeSourceChange,
   onEdgeTargetChange,
   onEdgeWeightChange,
+  onIsDirectedChange,
   onStartNodeChange,
   onGoalNodeChange,
   onAddNode,
@@ -367,6 +371,46 @@ export default function GraphEditorPanel({
               >
                 {graphDescription || "Sin descripción"}
               </div>
+
+              <div
+                className="mt-3 flex items-center justify-between rounded-[8px] border px-3 py-2"
+                style={{
+                  borderColor: theme.border,
+                  backgroundColor: theme.panelBg,
+                }}
+              >
+                <div>
+                  <div
+                    className="font-mono text-[11px] uppercase tracking-[0.04em]"
+                    style={{ color: theme.mutedText }}
+                  >
+                    {"// dirigido"}
+                  </div>
+                  <div className="mt-1 font-sans text-[12px]" style={{ color: theme.secondaryText }}>
+                    {isDirected ? "Las aristas respetan dirección" : "Las aristas se recorren en ambos sentidos"}
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={isDirected}
+                  onClick={() => onIsDirectedChange(!isDirected)}
+                  className="relative h-7 w-12 rounded-full border transition-all"
+                  style={{
+                    borderColor: isDirected ? theme.accent : theme.border,
+                    backgroundColor: isDirected ? theme.accentSoft : theme.panelSurface,
+                  }}
+                >
+                  <span
+                    className="absolute top-1 h-5 w-5 rounded-full transition-all"
+                    style={{
+                      left: isDirected ? 24 : 4,
+                      backgroundColor: isDirected ? theme.accent : theme.mutedText,
+                    }}
+                  />
+                </button>
+              </div>
             </div>
           ) : (
             <div className="space-y-2">
@@ -390,6 +434,45 @@ export default function GraphEditorPanel({
               />
               <div className="font-mono text-[11px]" style={{ color: theme.faintText }}>
                 {graphStats}
+              </div>
+              <div
+                className="mt-2 flex items-center justify-between rounded-[8px] border px-3 py-2"
+                style={{
+                  borderColor: theme.border,
+                  backgroundColor: theme.panelSurfaceAlt,
+                }}
+              >
+                <div>
+                  <div
+                    className="font-mono text-[11px] uppercase tracking-[0.04em]"
+                    style={{ color: theme.mutedText }}
+                  >
+                    {"// dirigido"}
+                  </div>
+                  <div className="mt-1 font-sans text-[12px]" style={{ color: theme.secondaryText }}>
+                    {isDirected ? "Las aristas respetan dirección" : "Las aristas se recorren en ambos sentidos"}
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={isDirected}
+                  onClick={() => onIsDirectedChange(!isDirected)}
+                  className="relative h-7 w-12 rounded-full border transition-all"
+                  style={{
+                    borderColor: isDirected ? theme.accent : theme.border,
+                    backgroundColor: isDirected ? theme.accentSoft : theme.panelSurface,
+                  }}
+                >
+                  <span
+                    className="absolute top-1 h-5 w-5 rounded-full transition-all"
+                    style={{
+                      left: isDirected ? 24 : 4,
+                      backgroundColor: isDirected ? theme.accent : theme.mutedText,
+                    }}
+                  />
+                </button>
               </div>
             </div>
           )}

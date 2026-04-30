@@ -19,7 +19,7 @@ export function buildCytoscapeStyles(
         height: 38,
         color: theme.strongText,
         "font-family": "JetBrains Mono, monospace",
-        "font-size": 12,
+        "font-size": 10.5,
         "font-weight": 700,
         "text-valign": "center",
         "text-halign": "center",
@@ -42,7 +42,7 @@ export function buildCytoscapeStyles(
         "curve-style": "bezier",
         "line-color": theme.border,
         "target-arrow-color": theme.border,
-        "target-arrow-shape": "triangle",
+        "target-arrow-shape": graph.isDirected ? "triangle" : "none",
       },
     },
     {

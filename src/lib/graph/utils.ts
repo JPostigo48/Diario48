@@ -175,6 +175,7 @@ export function validateGraphInput(payload: unknown): {
       name: raw.name!.trim(),
       description: raw.description?.trim() || "",
       isPublic: raw.isPublic ?? true,
+      isDirected: raw.isDirected ?? false,
       startNode: raw.startNode,
       goalNode: raw.goalNode,
       createdAt: raw.createdAt,

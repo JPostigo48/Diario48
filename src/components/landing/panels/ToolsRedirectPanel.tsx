@@ -10,6 +10,13 @@ const features = [
   'Modo claro / oscuro integrado',
 ];
 
+const gameFeatures = [
+  'Tablero 3x3 conectado a backend',
+  'Selector entre Minimax y Alpha-Beta',
+  'Engine aislado para que programes la lógica',
+  'Respuesta de la IA usando tu archivo TypeScript',
+];
+
 const algorithms = [
   { name: 'BFS', label: 'Breadth-First Search', status: 'live' },
   { name: 'DFS', label: 'Depth-First Search', status: 'live' },
@@ -27,7 +34,7 @@ export default function ToolsRedirectPanel() {
     <div className="flex-1 flex flex-col overflow-hidden">
       <div className="px-7 py-5 border-b border-(--br) bg-(--bg2)">
         <p className="font-mono text-[10px] tracking-[2px] text-(--acc) uppercase mb-1">
-          // herramientas
+          {"// herramientas"}
         </p>
         <h2 className="text-[26px] font-bold text-(--tx) tracking-tight">Graf Visualizer</h2>
         <p className="text-[14px] text-(--tx3) leading-relaxed mt-1 max-w-[560px]">
@@ -40,10 +47,10 @@ export default function ToolsRedirectPanel() {
         <div className="grid grid-cols-2 gap-4">
 
           {/* Card principal */}
-          <div className="col-span-2 bg-(--acc2) border border-(--acc3) rounded-[10px] p-[18px] flex items-start justify-between gap-6">
+          <div className="bg-(--acc2) border border-(--acc3) rounded-[10px] p-[18px] flex flex-col gap-5">
             <div className="flex-1">
               <h3 className="text-[16px] font-semibold text-(--acc) mb-1">Visualizador de algoritmos</h3>
-              <p className="text-[13px] text-(--tx2) leading-relaxed max-w-[480px]">
+              <p className="text-[13px] text-(--tx2) leading-relaxed">
                 Construye grafos desde cero o carga ejemplos predefinidos. Ejecuta algoritmos de
                 búsqueda y observa cada decisión del algoritmo en tiempo real con controles de
                 reproducción paso a paso.
@@ -51,11 +58,29 @@ export default function ToolsRedirectPanel() {
             </div>
             <button
               onClick={() => router.push('/tools/graphs')}
-              className="flex-shrink-0 font-mono text-[12px] font-bold px-5 py-2.5 rounded-md
+              className="font-mono text-[12px] font-bold px-5 py-2.5 rounded-md
                          bg-(--acc) text-white border-none cursor-pointer
-                         hover:opacity-85 transition-opacity self-center"
+                         hover:opacity-85 transition-opacity self-start"
             >
-              abrir herramienta →
+              abrir graph visualizer →
+            </button>
+          </div>
+
+          <div className="bg-(--bg2) border border-(--br) rounded-[10px] p-[18px] flex flex-col gap-5">
+            <div className="flex-1">
+              <h3 className="text-[16px] font-semibold text-(--tx) mb-1">Tic-Tac-Toe AI</h3>
+              <p className="text-[13px] text-(--tx2) leading-relaxed">
+                Playground simple para probar Minimax y Alpha-Beta desde la web, enviando la
+                matriz 3x3 al backend y delegando la jugada de la IA a tu lógica.
+              </p>
+            </div>
+            <button
+              onClick={() => router.push('/tools/tic-tac-toe')}
+              className="font-mono text-[12px] font-bold px-5 py-2.5 rounded-md
+                         bg-(--bg3) text-(--tx) border border-(--br) cursor-pointer
+                         hover:opacity-85 transition-opacity self-start"
+            >
+              abrir tic-tac-toe →
             </button>
           </div>
 
@@ -111,6 +136,18 @@ export default function ToolsRedirectPanel() {
                   </span>
                 ))}
               </div>
+            </div>
+
+            <div className="bg-(--bg2) border border-(--br) rounded-[10px] p-[18px]">
+              <h4 className="text-[15px] font-semibold text-(--tx) mb-3">Tic-Tac-Toe AI</h4>
+              <ul className="flex flex-col gap-2">
+                {gameFeatures.map((feature) => (
+                  <li key={feature} className="flex items-center gap-2 text-[12px] text-(--tx2)">
+                    <span className="w-1.5 h-1.5 rounded-full bg-(--purple) flex-shrink-0" />
+                    {feature}
+                  </li>
+                ))}
+              </ul>
             </div>
           </div>
 

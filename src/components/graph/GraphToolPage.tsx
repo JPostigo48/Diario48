@@ -36,16 +36,18 @@ const EMPTY_GRAPH_NAME = "";
 
 export default function GraphToolPage() {
   const [algorithm, setAlgorithm] = useState<AlgorithmType>("bfs");
-  const [themeMode, setThemeMode] = useState<GraphThemeMode>("dark");
-
-  // Lee la preferencia guardada una sola vez al montar (sin sobrescribir localStorage)
-  useEffect(() => {
-    const saved = localStorage.getItem("d48-theme");
-    if (saved === "light" || saved === "dark") {
-      setThemeMode(saved);
-      document.documentElement.setAttribute("data-theme", saved);
+  const [themeMode, setThemeMode] = useState<GraphThemeMode>(() => {
+    if (typeof window === "undefined") {
+      return "dark";
     }
-  }, []);
+
+    const saved = window.localStorage.getItem("d48-theme");
+    return saved === "light" || saved === "dark" ? saved : "dark";
+  });
+
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", themeMode);
+  }, [themeMode]);
 
   const toggleTheme = useCallback(() => {
     setThemeMode((current) => {
@@ -79,6 +81,7 @@ export default function GraphToolPage() {
   const [edgeSource, setEdgeSource] = useState("");
   const [edgeTarget, setEdgeTarget] = useState("");
   const [edgeWeight, setEdgeWeight] = useState("");
+  const [isDirected, setIsDirected] = useState(false);
   const [modalNodeLabel, setModalNodeLabel] = useState("");
   const [modalNodeHeuristic, setModalNodeHeuristic] = useState("");
   const [modalEdgeWeight, setModalEdgeWeight] = useState("");
@@ -100,10 +103,11 @@ export default function GraphToolPage() {
       ...baseGraph,
       name: graphName.trim() || baseGraph.name || "Nuevo grafo",
       description: graphDescription,
+      isDirected,
       startNode,
       goalNode,
     }),
-    [goalNode, graphDescription, graphName, startNode],
+    [goalNode, graphDescription, graphName, isDirected, startNode],
   );
 
   const steps = useMemo(() => {
@@ -117,13 +121,14 @@ export default function GraphToolPage() {
         ...graph,
         name: graphName.trim() || graph.name,
         description: graphDescription,
+        isDirected,
         startNode,
         goalNode,
       },
       startNode,
       goalNode,
     );
-  }, [algorithm, goalNode, graph, graphDescription, graphName, startNode]);
+  }, [algorithm, goalNode, graph, graphDescription, graphName, isDirected, startNode]);
 
   const effectiveStepIndex =
     steps.length === 0 ? 0 : Math.min(currentStepIndex, steps.length - 1);
@@ -180,6 +185,7 @@ export default function GraphToolPage() {
     setGraph(nextGraph);
     setGraphName(nextGraph.name);
     setGraphDescription(nextGraph.description ?? "");
+    setIsDirected(nextGraph.isDirected ?? false);
     setStartNode(nextGraph.startNode ?? nextGraph.nodes[0]?.id ?? "");
     setGoalNode(nextGraph.goalNode ?? nextGraph.nodes.at(-1)?.id ?? "");
     setCurrentStepIndex(0);
@@ -196,6 +202,7 @@ export default function GraphToolPage() {
     setGraph(null);
     setGraphName("");
     setGraphDescription("");
+    setIsDirected(false);
     setStartNode("");
     setGoalNode("");
     setCurrentStepIndex(0);
@@ -276,6 +283,7 @@ export default function GraphToolPage() {
       setGraph(nextGraph);
       setGraphName(nextGraph.name);
       setGraphDescription(nextGraph.description ?? "");
+      setIsDirected(nextGraph.isDirected ?? false);
       setStartNode(nextGraph.startNode ?? nextGraph.nodes[0]?.id ?? "");
       setGoalNode(nextGraph.goalNode ?? nextGraph.nodes.at(-1)?.id ?? "");
       setCurrentStepIndex(0);
@@ -389,6 +397,7 @@ export default function GraphToolPage() {
           name: graphName.trim() || "Nuevo grafo",
           description: graphDescription,
           isPublic: true,
+          isDirected,
           nodes: [],
           edges: [],
           startNode,
@@ -421,6 +430,7 @@ export default function GraphToolPage() {
         ...safeGraph,
         name: graphName.trim() || safeGraph.name || "Nuevo grafo",
         description: graphDescription,
+        isDirected,
         startNode: safeGraph.startNode || startNode || resolvedId,
         goalNode: safeGraph.goalNode || goalNode || resolvedId,
         nodes: [...safeGraph.nodes, nextNode],
@@ -446,6 +456,7 @@ export default function GraphToolPage() {
     goalNode,
     graphDescription,
     graphName,
+    isDirected,
     nodeHeuristic,
     nodeId,
     nodeLabel,
@@ -486,6 +497,7 @@ export default function GraphToolPage() {
       ...graph,
       name: graphName.trim() || graph.name,
       description: graphDescription,
+      isDirected,
       startNode,
       goalNode,
       edges: [...graph.edges, nextEdge],
@@ -503,6 +515,7 @@ export default function GraphToolPage() {
     graph,
     graphDescription,
     graphName,
+    isDirected,
     startNode,
   ]);
 
@@ -793,6 +806,7 @@ export default function GraphToolPage() {
           edgeSource={edgeSource}
           edgeTarget={edgeTarget}
           edgeWeight={edgeWeight}
+          isDirected={isDirected}
           startNode={startNode}
           goalNode={goalNode}
           savedGraphs={savedGraphs}
@@ -811,6 +825,7 @@ export default function GraphToolPage() {
           onEdgeSourceChange={setEdgeSource}
           onEdgeTargetChange={setEdgeTarget}
           onEdgeWeightChange={setEdgeWeight}
+          onIsDirectedChange={setIsDirected}
           onStartNodeChange={setStartNode}
           onGoalNodeChange={setGoalNode}
           onAddNode={addNode}
@@ -841,6 +856,7 @@ export default function GraphToolPage() {
                       ...graph,
                       name: graphName.trim() || graph.name,
                       description: graphDescription,
+                      isDirected,
                       startNode,
                       goalNode,
                     }

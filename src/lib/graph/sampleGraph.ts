@@ -4,6 +4,7 @@ export const sampleGraph: GraphData = {
   name: "Grafo de ejemplo",
   description: "Grafo base para explorar BFS paso a paso en Diario48.",
   isPublic: true,
+  isDirected: false,
   startNode: "A",
   goalNode: "H",
   nodes: [

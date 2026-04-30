@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import cytoscape, { type Core, type ElementDefinition } from "cytoscape";
 import { buildCytoscapeStyles } from "@/lib/graph/cytoscapeStyles";
 import type { GraphThemeMode } from "@/lib/graph/theme";
@@ -49,6 +49,9 @@ export default function GraphCanvas({
 }: GraphCanvasProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const cyRef = useRef<Core | null>(null);
+  const [heuristicBadges, setHeuristicBadges] = useState<
+    Array<{ id: string; value: number; x: number; y: number }>
+  >([]);
 
   const elements = useMemo<ElementDefinition[]>(() => {
     if (!graph) {
@@ -63,6 +66,15 @@ export default function GraphCanvas({
         id: node.id,
         label: node.label,
       },
+      style: step?.nodeVisuals?.[node.id]
+        ? {
+            "background-color": step.nodeVisuals[node.id].fillColor,
+            "border-color":
+              step.nodeVisuals[node.id].borderColor ??
+              step.nodeVisuals[node.id].fillColor,
+            color: step.nodeVisuals[node.id].textColor ?? undefined,
+          }
+        : undefined,
       classes: `node-${nodeStates[node.id] ?? "unvisited"} ${
         selectedElement?.type === "node" && selectedElement.id === node.id
           ? "is-selected"
@@ -115,10 +127,29 @@ export default function GraphCanvas({
       boxSelectionEnabled: false,
     });
 
+    const syncHeuristicBadges = () => {
+      const badges = graph.nodes
+        .filter((node) => typeof node.heuristic === "number")
+        .map((node) => {
+          const cyNode = cy.getElementById(node.id);
+          const position = cyNode.renderedPosition();
+
+          return {
+            id: node.id,
+            value: node.heuristic as number,
+            x: position.x,
+            y: position.y + 18,
+          };
+        });
+
+      setHeuristicBadges(badges);
+    };
+
     cy.on("dragfree", "node", (event) => {
       const node = event.target;
       const position = node.position();
       onNodePositionChange(node.id(), position.x, position.y);
+      syncHeuristicBadges();
     });
 
     cy.on("tap", "node, edge", (event) => {
@@ -137,9 +168,13 @@ export default function GraphCanvas({
       }
     });
 
+    cy.on("render zoom pan resize", syncHeuristicBadges);
+    syncHeuristicBadges();
+
     cyRef.current = cy;
 
     return () => {
+      setHeuristicBadges([]);
       cy.destroy();
       if (cyRef.current === cy) {
         cyRef.current = null;
@@ -180,6 +215,28 @@ export default function GraphCanvas({
       ) : null}
 
       <div ref={containerRef} className="relative z-10 h-full w-full" />
+
+      {graph ? (
+        <div className="pointer-events-none absolute inset-0 z-20">
+          {heuristicBadges.map((badge) => (
+            <div
+              key={badge.id}
+              className="absolute -translate-x-1/2 rounded px-1 font-mono text-[8px] leading-none"
+              style={{
+                left: badge.x,
+                top: badge.y,
+                color: dimText,
+                backgroundColor:
+                  themeMode === "dark"
+                    ? "rgba(20, 24, 34, 0.72)"
+                    : "rgba(255, 255, 255, 0.84)",
+              }}
+            >
+              h={badge.value}
+            </div>
+          ))}
+        </div>
+      ) : null}
 
       {graph ? (
         <div
