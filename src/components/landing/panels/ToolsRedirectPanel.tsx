@@ -17,6 +17,13 @@ const gameFeatures = [
   'Respuesta de la IA usando tu archivo TypeScript',
 ];
 
+const papersReviewFeatures = [
+  'Embudo temático por capas editables',
+  'Vista comparativa y cards filtrables',
+  'Relaciones manuales entre papers',
+  'Persistencia real e importación/exportación JSON',
+];
+
 const algorithms = [
   { name: 'BFS', label: 'Breadth-First Search', status: 'live' },
   { name: 'DFS', label: 'Depth-First Search', status: 'live' },
@@ -27,6 +34,14 @@ const algorithms = [
 
 const stack = ['Next.js + TypeScript', 'Cytoscape.js', 'React 19', 'MongoDB', 'Tailwind CSS'];
 
+function AccessBadge({ label }: { label: string }) {
+  return (
+    <span className="inline-flex rounded border border-(--br) bg-(--bg3) px-2 py-0.5 font-mono text-[10px] text-(--tx3)">
+      {label}
+    </span>
+  );
+}
+
 export default function ToolsRedirectPanel() {
   const router = useRouter();
 
@@ -36,10 +51,10 @@ export default function ToolsRedirectPanel() {
         <p className="font-mono text-[10px] tracking-[2px] text-(--acc) uppercase mb-1">
           {"// herramientas"}
         </p>
-        <h2 className="text-[26px] font-bold text-(--tx) tracking-tight">Graf Visualizer</h2>
+        <h2 className="text-[26px] font-bold text-(--tx) tracking-tight">Herramientas</h2>
         <p className="text-[14px] text-(--tx3) leading-relaxed mt-1 max-w-[560px]">
-          Herramienta interactiva para visualizar y ejecutar algoritmos de búsqueda en grafos,
-          paso a paso. Desarrollada como proyecto universitario de computación aplicada.
+          Un conjunto de herramientas visuales y experimentales construidas dentro de Diario48,
+          pensadas para estudiar, organizar y probar ideas con una interfaz clara.
         </p>
       </div>
 
@@ -49,7 +64,10 @@ export default function ToolsRedirectPanel() {
           {/* Card principal */}
           <div className="bg-(--acc2) border border-(--acc3) rounded-[10px] p-[18px] flex flex-col gap-5">
             <div className="flex-1">
-              <h3 className="text-[16px] font-semibold text-(--acc) mb-1">Visualizador de algoritmos</h3>
+              <div className="mb-2 flex items-center gap-2">
+                <h3 className="text-[16px] font-semibold text-(--acc)">Visualizador de algoritmos</h3>
+                <AccessBadge label="requiere sesión" />
+              </div>
               <p className="text-[13px] text-(--tx2) leading-relaxed">
                 Construye grafos desde cero o carga ejemplos predefinidos. Ejecuta algoritmos de
                 búsqueda y observa cada decisión del algoritmo en tiempo real con controles de
@@ -81,6 +99,27 @@ export default function ToolsRedirectPanel() {
                          hover:opacity-85 transition-opacity self-start"
             >
               abrir tic-tac-toe →
+            </button>
+          </div>
+
+          <div className="col-span-2 bg-(--bg2) border border-(--br) rounded-[10px] p-[18px] flex items-start justify-between gap-6">
+            <div className="flex-1">
+              <div className="mb-2 flex items-center gap-2">
+                <h3 className="text-[16px] font-semibold text-(--tx)">Papers Review</h3>
+                <AccessBadge label="requiere sesión" />
+              </div>
+              <p className="text-[13px] text-(--tx2) leading-relaxed max-w-[560px]">
+                Dashboard bibliográfico para estructurar estados del arte por capas, comparar papers,
+                abrir PDFs, tomar notas y mapear relaciones entre trabajos.
+              </p>
+            </div>
+            <button
+              onClick={() => router.push('/tools/papers-review')}
+              className="flex-shrink-0 font-mono text-[12px] font-bold px-5 py-2.5 rounded-md
+                         bg-(--bg3) text-(--tx) border border-(--br) cursor-pointer
+                         hover:opacity-85 transition-opacity self-center"
+            >
+              abrir papers review →
             </button>
           </div>
 
@@ -144,6 +183,18 @@ export default function ToolsRedirectPanel() {
                 {gameFeatures.map((feature) => (
                   <li key={feature} className="flex items-center gap-2 text-[12px] text-(--tx2)">
                     <span className="w-1.5 h-1.5 rounded-full bg-(--purple) flex-shrink-0" />
+                    {feature}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="bg-(--bg2) border border-(--br) rounded-[10px] p-[18px]">
+              <h4 className="text-[15px] font-semibold text-(--tx) mb-3">Papers Review</h4>
+              <ul className="flex flex-col gap-2">
+                {papersReviewFeatures.map((feature) => (
+                  <li key={feature} className="flex items-center gap-2 text-[12px] text-(--tx2)">
+                    <span className="w-1.5 h-1.5 rounded-full bg-(--amber) flex-shrink-0" />
                     {feature}
                   </li>
                 ))}

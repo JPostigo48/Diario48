@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useRouter } from 'next/navigation';
 
 type Panel = 'home' | 'projects' | 'university' | 'personal' | 'about' | 'tools';
 
@@ -10,6 +11,8 @@ interface Props {
 }
 
 export default function LandingSidebar({ activePanel, onNavigate }: Props) {
+  const router = useRouter();
+
   const item = (panel: Panel, label: string, dot: string, count?: string | number) => (
     <button
       key={panel}
@@ -34,6 +37,21 @@ export default function LandingSidebar({ activePanel, onNavigate }: Props) {
           {count}
         </span>
       )}
+    </button>
+  );
+
+  const toolItem = (href: string, label: string, dot: string) => (
+    <button
+      key={href}
+      onClick={() => router.push(href)}
+      className="flex items-center justify-between w-full px-[18px] py-2 text-[13px]
+                 transition-all duration-100 border-r-2
+                 text-[var(--tx2)] border-transparent hover:bg-[var(--bg3)] hover:text-[var(--tx)]"
+    >
+      <div className="flex items-center gap-2.5">
+        <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${dot}`} />
+        <span>{label}</span>
+      </div>
     </button>
   );
 
@@ -62,15 +80,10 @@ export default function LandingSidebar({ activePanel, onNavigate }: Props) {
       <div className="my-2.5 h-px bg-[var(--br)]" />
 
       <SidebarSection label="herramientas">
-        {item('tools', 'Graf Visualizer', 'bg-[var(--acc)]')}
-        <button
-          disabled
-          className="flex items-center gap-2.5 w-full px-[18px] py-2 text-[13px]
-                     text-[var(--tx4)] opacity-40 cursor-not-allowed"
-        >
-          <div className="w-1.5 h-1.5 rounded-full bg-[var(--tx4)]" />
-          Más herramientas
-        </button>
+        {toolItem('/tools/graphs', 'Graph Visualizer', 'bg-[var(--acc)]')}
+        {toolItem('/tools/music-tracker', 'Music Tracker', 'bg-[var(--green)]')}
+        {toolItem('/tools/tic-tac-toe', 'Tic-Tac-Toe AI', 'bg-[var(--purple)]')}
+        {toolItem('/tools/papers-review', 'Papers Review', 'bg-[var(--amber)]')}
       </SidebarSection>
     </aside>
   );
