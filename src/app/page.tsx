@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import LandingNav from '@/components/landing/LandingNav';
 import LandingSidebar from '@/components/landing/LandingSidebar';
 import HomePanel from '@/components/landing/panels/HomePanel';
@@ -9,25 +9,13 @@ import UniversityPanel from '@/components/landing/panels/UniversityPanel';
 import PersonalPanel from '@/components/landing/panels/PersonalPanel';
 import AboutPanel from '@/components/landing/panels/AboutPanel';
 import ToolsRedirectPanel from '@/components/landing/panels/ToolsRedirectPanel';
+import { useThemeMode } from '@/components/ui/useThemeMode';
 
 type Panel = 'home' | 'projects' | 'university' | 'personal' | 'about' | 'tools';
 
 export default function LandingPage() {
   const [panel, setPanel] = useState<Panel>('home');
-  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
-
-  // Sincroniza con el tema ya aplicado por el script inline del layout
-  useEffect(() => {
-    const saved = localStorage.getItem('d48-theme') as 'dark' | 'light' | null;
-    if (saved === 'light' || saved === 'dark') setTheme(saved);
-  }, []);
-
-  const toggleTheme = () => {
-    const next = theme === 'dark' ? 'light' : 'dark';
-    setTheme(next);
-    document.documentElement.setAttribute('data-theme', next);
-    localStorage.setItem('d48-theme', next);
-  };
+  const { theme, toggleTheme } = useThemeMode();
 
   const panels: Record<Panel, React.ReactNode> = {
     home: <HomePanel onNavigate={setPanel} />,

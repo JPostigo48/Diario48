@@ -1,3 +1,7 @@
+'use client';
+
+import { useSyncExternalStore } from 'react';
+
 function MoonIcon() {
   return (
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
@@ -30,12 +34,47 @@ interface Props {
 }
 
 export default function ThemeSwitcher({ theme, onToggle }: Props) {
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
+
+  if (!mounted) {
+    return (
+      <div
+        className="flex items-center gap-0.5 rounded-[20px] border border-(--br2)
+                   bg-(--bg3) p-1"
+        suppressHydrationWarning
+      >
+        <button
+          type="button"
+          title="Modo oscuro"
+          className="flex items-center justify-center w-7 h-7 rounded-[14px]
+                     transition-all cursor-pointer border-none bg-transparent text-(--tx4)"
+        >
+          <MoonIcon />
+        </button>
+        <button
+          type="button"
+          title="Modo claro"
+          className="flex items-center justify-center w-7 h-7 rounded-[14px]
+                     transition-all cursor-pointer border-none bg-transparent text-(--tx4)"
+        >
+          <SunIcon />
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div
       className="flex items-center gap-0.5 rounded-[20px] border border-(--br2)
                  bg-(--bg3) p-1"
+      suppressHydrationWarning
     >
       <button
+        type="button"
         onClick={() => theme !== 'dark' && onToggle()}
         title="Modo oscuro"
         className={`flex items-center justify-center w-7 h-7 rounded-[14px]
@@ -48,6 +87,7 @@ export default function ThemeSwitcher({ theme, onToggle }: Props) {
         <MoonIcon />
       </button>
       <button
+        type="button"
         onClick={() => theme !== 'light' && onToggle()}
         title="Modo claro"
         className={`flex items-center justify-center w-7 h-7 rounded-[14px]

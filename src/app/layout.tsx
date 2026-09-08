@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { JetBrains_Mono, Sora } from "next/font/google";
+import ThemeHydrator from "@/components/ui/ThemeHydrator";
 import "./globals.css";
 
 const sora = Sora({
@@ -29,17 +30,11 @@ export default function RootLayout({
     <html
       lang="es"
       data-theme="dark"
+      suppressHydrationWarning
       className={`${sora.variable} ${jetBrainsMono.variable} h-full antialiased`}
     >
-      <head>
-        {/* Aplica el tema guardado antes del primer paint para evitar flash */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `try{var t=localStorage.getItem('d48-theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t);}catch(e){}`,
-          }}
-        />
-      </head>
       <body className="min-h-full overflow-hidden bg-[var(--d48-bg)] font-sans text-[var(--d48-text)]">
+        <ThemeHydrator />
         {children}
       </body>
     </html>

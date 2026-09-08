@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import ThemeSwitcher from "@/components/ui/ThemeSwitcher";
+import { useThemeMode } from "@/components/ui/useThemeMode";
 import AlgorithmSelector from "./AlgorithmSelector";
 import TicTacToeBoard from "./TicTacToeBoard";
 import {
@@ -20,14 +21,7 @@ import type {
 } from "@/lib/tictactoe/types";
 
 export default function TicTacToePage() {
-  const [theme, setTheme] = useState<"dark" | "light">(() => {
-    if (typeof window === "undefined") {
-      return "dark";
-    }
-
-    const saved = window.localStorage.getItem("d48-theme");
-    return saved === "light" || saved === "dark" ? saved : "dark";
-  });
+  const { theme, toggleTheme } = useThemeMode();
   const [algorithm, setAlgorithm] = useState<AlgorithmType>("minimax");
   const [board, setBoard] = useState(createEmptyBoard);
   const [currentPlayer, setCurrentPlayer] = useState<Player>("X");
@@ -40,16 +34,6 @@ export default function TicTacToePage() {
 
   const winner = useMemo(() => getWinner(board), [board]);
   const draw = useMemo(() => isDraw(board), [board]);
-
-  const applyTheme = (nextTheme: "dark" | "light") => {
-    setTheme(nextTheme);
-    document.documentElement.setAttribute("data-theme", nextTheme);
-    localStorage.setItem("d48-theme", nextTheme);
-  };
-
-  const toggleTheme = () => {
-    applyTheme(theme === "dark" ? "light" : "dark");
-  };
 
   const resetGame = () => {
     setBoard(createEmptyBoard());
