@@ -36,6 +36,7 @@ export interface GraphData {
   name: string;
   description?: string;
   isPublic: boolean;
+  visibility?: "private" | "link-readonly";
   isDirected: boolean;
   nodes: GraphNode[];
   edges: GraphEdge[];

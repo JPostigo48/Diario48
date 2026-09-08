@@ -6,6 +6,7 @@ type GraphEditorPanelProps = {
   graph: GraphData | null;
   graphName: string;
   graphDescription: string;
+  visibility: "private" | "link-readonly";
   nodeId: string;
   nodeLabel: string;
   nodeHeuristic: string;
@@ -25,6 +26,7 @@ type GraphEditorPanelProps = {
   isLoadModalOpen: boolean;
   onGraphNameChange: (value: string) => void;
   onGraphDescriptionChange: (value: string) => void;
+  onVisibilityChange: (value: "private" | "link-readonly") => void;
   onNodeIdChange: (value: string) => void;
   onNodeLabelChange: (value: string) => void;
   onNodeHeuristicChange: (value: string) => void;
@@ -280,6 +282,7 @@ export default function GraphEditorPanel({
   graph,
   graphName,
   graphDescription,
+  visibility,
   nodeId,
   nodeLabel,
   nodeHeuristic,
@@ -299,6 +302,7 @@ export default function GraphEditorPanel({
   isLoadModalOpen,
   onGraphNameChange,
   onGraphDescriptionChange,
+  onVisibilityChange,
   onNodeIdChange,
   onNodeLabelChange,
   onNodeHeuristicChange,
@@ -434,6 +438,29 @@ export default function GraphEditorPanel({
               />
               <div className="font-mono text-[11px]" style={{ color: theme.faintText }}>
                 {graphStats}
+              </div>
+              <div className="mt-2">
+                <label
+                  className="mb-1 block font-mono text-[11px] uppercase tracking-[0.04em]"
+                  style={{ color: theme.mutedText }}
+                >
+                  visibilidad
+                </label>
+                <select
+                  value={visibility}
+                  onChange={(event) =>
+                    onVisibilityChange(event.target.value as "private" | "link-readonly")
+                  }
+                  className="w-full rounded-[6px] border px-3 py-2 font-mono text-[13px] outline-none"
+                  style={{
+                    borderColor: theme.border,
+                    backgroundColor: theme.panelSurface,
+                    color: theme.strongText,
+                  }}
+                >
+                  <option value="private">private</option>
+                  <option value="link-readonly">link-readonly</option>
+                </select>
               </div>
               <div
                 className="mt-2 flex items-center justify-between rounded-[8px] border px-3 py-2"

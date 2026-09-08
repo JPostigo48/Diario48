@@ -2,7 +2,10 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import AuthStatusControls from "@/components/auth/AuthStatusControls";
 import ThemeSwitcher from "@/components/ui/ThemeSwitcher";
+import ToolTopbar from "@/components/ui/ToolTopbar";
 import AlgorithmPanel from "./AlgorithmPanel";
 import ElementActionMenu from "./ElementActionMenu";
 import ElementEditorModal from "./ElementEditorModal";
@@ -10,9 +13,10 @@ import GraphCanvas from "./GraphCanvas";
 import GraphEditorPanel from "./GraphEditorPanel";
 import GraphTimeline from "./GraphTimeline";
 import StepControls from "./StepControls";
+import { useThemeMode } from "@/components/ui/useThemeMode";
 import { algorithmOptions, runAlgorithm } from "@/lib/graph/algorithmSteps";
 import { sampleGraph } from "@/lib/graph/sampleGraph";
-import { graphThemes, type GraphThemeMode } from "@/lib/graph/theme";
+import { graphThemes } from "@/lib/graph/theme";
 import type {
   AlgorithmType,
   GraphData,
@@ -34,42 +38,30 @@ import {
 
 const EMPTY_GRAPH_NAME = "";
 
-export default function GraphToolPage() {
+type GraphToolPageProps = {
+  initialGraph?: GraphData | null;
+};
+
+export default function GraphToolPage({ initialGraph = null }: GraphToolPageProps) {
+  const router = useRouter();
   const [algorithm, setAlgorithm] = useState<AlgorithmType>("bfs");
-  const [themeMode, setThemeMode] = useState<GraphThemeMode>(() => {
-    if (typeof window === "undefined") {
-      return "dark";
-    }
-
-    const saved = window.localStorage.getItem("d48-theme");
-    return saved === "light" || saved === "dark" ? saved : "dark";
-  });
-
-  useEffect(() => {
-    document.documentElement.setAttribute("data-theme", themeMode);
-  }, [themeMode]);
-
-  const toggleTheme = useCallback(() => {
-    setThemeMode((current) => {
-      const next = current === "dark" ? "light" : "dark";
-      localStorage.setItem("d48-theme", next);
-      document.documentElement.setAttribute("data-theme", next);
-      return next;
-    });
-  }, []);
-  const [graph, setGraph] = useState<GraphData | null>(null);
-  const [graphName, setGraphName] = useState(EMPTY_GRAPH_NAME);
-  const [graphDescription, setGraphDescription] = useState("");
-  const [startNode, setStartNode] = useState("");
-  const [goalNode, setGoalNode] = useState("");
+  const { theme: themeMode, toggleTheme } = useThemeMode();
+  const [graph, setGraph] = useState<GraphData | null>(initialGraph);
+  const [graphName, setGraphName] = useState(initialGraph?.name ?? EMPTY_GRAPH_NAME);
+  const [graphDescription, setGraphDescription] = useState(initialGraph?.description ?? "");
+  const [visibility, setVisibility] = useState<"private" | "link-readonly">(
+    initialGraph?.visibility === "link-readonly" ? "link-readonly" : "private",
+  );
+  const [startNode, setStartNode] = useState(initialGraph?.startNode ?? "");
+  const [goalNode, setGoalNode] = useState(initialGraph?.goalNode ?? "");
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(false);
   const [savedGraphs, setSavedGraphs] = useState<GraphData[]>([]);
   const [loadingSavedGraphs, setLoadingSavedGraphs] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
   const [loadMessage, setLoadMessage] = useState("");
-  const [loadedGraphId, setLoadedGraphId] = useState<string | null>(null);
-  const [isMetadataEditing, setIsMetadataEditing] = useState(true);
+  const [loadedGraphId, setLoadedGraphId] = useState<string | null>(initialGraph?.id ?? null);
+  const [isMetadataEditing, setIsMetadataEditing] = useState(!initialGraph);
   const [isLoadModalOpen, setIsLoadModalOpen] = useState(false);
   const [selectedElement, setSelectedElement] =
     useState<SelectedGraphElement>(null);
@@ -81,7 +73,7 @@ export default function GraphToolPage() {
   const [edgeSource, setEdgeSource] = useState("");
   const [edgeTarget, setEdgeTarget] = useState("");
   const [edgeWeight, setEdgeWeight] = useState("");
-  const [isDirected, setIsDirected] = useState(false);
+  const [isDirected, setIsDirected] = useState(initialGraph?.isDirected ?? false);
   const [modalNodeLabel, setModalNodeLabel] = useState("");
   const [modalNodeHeuristic, setModalNodeHeuristic] = useState("");
   const [modalEdgeWeight, setModalEdgeWeight] = useState("");
@@ -103,11 +95,13 @@ export default function GraphToolPage() {
       ...baseGraph,
       name: graphName.trim() || baseGraph.name || "Nuevo grafo",
       description: graphDescription,
+      isPublic: visibility === "link-readonly",
+      visibility,
       isDirected,
       startNode,
       goalNode,
     }),
-    [goalNode, graphDescription, graphName, isDirected, startNode],
+    [goalNode, graphDescription, graphName, isDirected, startNode, visibility],
   );
 
   const steps = useMemo(() => {
@@ -185,6 +179,7 @@ export default function GraphToolPage() {
     setGraph(nextGraph);
     setGraphName(nextGraph.name);
     setGraphDescription(nextGraph.description ?? "");
+    setVisibility(nextGraph.visibility === "link-readonly" ? "link-readonly" : "private");
     setIsDirected(nextGraph.isDirected ?? false);
     setStartNode(nextGraph.startNode ?? nextGraph.nodes[0]?.id ?? "");
     setGoalNode(nextGraph.goalNode ?? nextGraph.nodes.at(-1)?.id ?? "");
@@ -202,6 +197,7 @@ export default function GraphToolPage() {
     setGraph(null);
     setGraphName("");
     setGraphDescription("");
+    setVisibility("private");
     setIsDirected(false);
     setStartNode("");
     setGoalNode("");
@@ -283,6 +279,7 @@ export default function GraphToolPage() {
       setGraph(nextGraph);
       setGraphName(nextGraph.name);
       setGraphDescription(nextGraph.description ?? "");
+      setVisibility(nextGraph.visibility === "link-readonly" ? "link-readonly" : "private");
       setIsDirected(nextGraph.isDirected ?? false);
       setStartNode(nextGraph.startNode ?? nextGraph.nodes[0]?.id ?? "");
       setGoalNode(nextGraph.goalNode ?? nextGraph.nodes.at(-1)?.id ?? "");
@@ -295,12 +292,15 @@ export default function GraphToolPage() {
       stopAutoPlay();
       setLoadMessage(`Grafo "${nextGraph.name}" cargado.`);
       setSaveMessage("");
+      if (nextGraph.id) {
+        router.push(`/tools/graphs/${nextGraph.id}`);
+      }
     } catch (error) {
       setLoadMessage(
         error instanceof Error ? error.message : "No se pudo cargar el grafo.",
       );
     }
-  }, [closeElementModal, stopAutoPlay]);
+  }, [closeElementModal, router, stopAutoPlay]);
 
   const saveNewGraph = useCallback(async () => {
     if (!graph) {
@@ -330,16 +330,28 @@ export default function GraphToolPage() {
         );
       }
 
-      setLoadedGraphId(null);
-      setIsMetadataEditing(true);
-      setSaveMessage(`Se creó un nuevo grafo: "${result.data.name}".`);
+      const persistedGraph = {
+        ...result.data,
+        id: result.data.id ?? (result.data as GraphData & { _id?: string })._id,
+      };
+
+      setGraph(persistedGraph);
+      setLoadedGraphId(persistedGraph.id ?? null);
+      setIsMetadataEditing(false);
+      setVisibility(
+        persistedGraph.visibility === "link-readonly" ? "link-readonly" : "private",
+      );
+      setSaveMessage(`Se creó un nuevo grafo: "${persistedGraph.name}".`);
       await refreshSavedGraphs();
+      if (persistedGraph.id) {
+        router.push(`/tools/graphs/${persistedGraph.id}`);
+      }
     } catch (error) {
       setSaveMessage(
         error instanceof Error ? error.message : "No se pudo guardar el grafo.",
       );
     }
-  }, [graph, refreshSavedGraphs, syncGraphMetadata]);
+  }, [graph, refreshSavedGraphs, router, syncGraphMetadata]);
 
   const updateGraph = useCallback(async () => {
     if (!graph || !loadedGraphId) {
@@ -376,16 +388,22 @@ export default function GraphToolPage() {
       setGraph(persistedGraph);
       setGraphName(persistedGraph.name);
       setGraphDescription(persistedGraph.description ?? "");
+      setVisibility(
+        persistedGraph.visibility === "link-readonly" ? "link-readonly" : "private",
+      );
       setLoadedGraphId(persistedGraph.id ?? loadedGraphId);
       setIsMetadataEditing(false);
       setSaveMessage(`Grafo "${persistedGraph.name}" actualizado.`);
       await refreshSavedGraphs();
+      if (persistedGraph.id) {
+        router.push(`/tools/graphs/${persistedGraph.id}`);
+      }
     } catch (error) {
       setSaveMessage(
         error instanceof Error ? error.message : "No se pudo actualizar el grafo.",
       );
     }
-  }, [graph, loadedGraphId, refreshSavedGraphs, syncGraphMetadata]);
+  }, [graph, loadedGraphId, refreshSavedGraphs, router, syncGraphMetadata]);
 
   const addNode = useCallback(() => {
     const baseLabel = nodeLabel || nodeId || "N";
@@ -396,7 +414,8 @@ export default function GraphToolPage() {
         ({
           name: graphName.trim() || "Nuevo grafo",
           description: graphDescription,
-          isPublic: true,
+          isPublic: visibility === "link-readonly",
+          visibility,
           isDirected,
           nodes: [],
           edges: [],
@@ -461,6 +480,7 @@ export default function GraphToolPage() {
     nodeId,
     nodeLabel,
     startNode,
+    visibility,
   ]);
 
   const addEdge = useCallback(() => {
@@ -714,92 +734,131 @@ export default function GraphToolPage() {
 
   return (
     <main
-      className="flex h-screen w-screen flex-col overflow-hidden rounded-[12px] border"
+      className="flex h-screen w-screen flex-col overflow-hidden border"
       style={{
         borderColor: theme.border,
         backgroundColor: theme.appBgDeep,
         color: theme.appText,
       }}
     >
-      <header
-        className="grid grid-cols-[1fr_auto_1fr] items-center gap-4 border-b px-4 py-3"
+      <ToolTopbar
         style={{ borderColor: theme.border, backgroundColor: theme.panelBg }}
-      >
-        <Link
-          href="/"
-          className="justify-self-start font-mono text-[17px] font-bold hover:opacity-75 transition-opacity"
-          style={{ color: theme.strongText, textDecoration: "none" }}
-        >
-          Diario<span style={{ color: theme.accent }}>48</span>
-          <span style={{ color: theme.faintText, margin: "0 8px", fontSize: "14px", fontWeight: 400 }}>/</span>
-          <span style={{ color: theme.mutedText, fontSize: "13px", fontWeight: 400 }}>visualizador de grafos</span>
-        </Link>
-
-        <div
-          className="flex items-stretch gap-1 rounded-[8px] border p-1 justify-self-center"
-          style={{ borderColor: theme.border, backgroundColor: theme.panelSurface }}
-        >
-          {algorithmOptions.map((option) => {
-            const isActive = option.type === algorithm;
-
-            return (
-              <button
-                key={option.id}
-                type="button"
-                onClick={() => option.available && option.type && setAlgorithm(option.type)}
-                disabled={!option.available}
-                className={`flex min-h-[44px] min-w-[58px] flex-col items-center justify-center rounded-[6px] border px-3 py-1.5 font-mono transition-all ${
-                  !option.available ? "cursor-not-allowed opacity-35" : ""
-                }`}
-                style={
-                  isActive
-                    ? {
-                        borderColor: theme.accent,
-                        backgroundColor: theme.accentSoft,
-                        color: theme.strongText,
-                      }
-                    : {
-                        borderColor: "transparent",
-                        color: theme.mutedText,
-                      }
-                }
-              >
-                <span className="text-[11px] leading-[1.05]">{option.label}</span>
-                {option.secondaryLabel ? (
-                  <span
-                    className="mt-[2px] text-[9px] leading-[1.05]"
-                    style={{ color: isActive ? theme.secondaryText : theme.faintText }}
-                  >
-                    {option.secondaryLabel}
-                  </span>
-                ) : null}
-              </button>
-            );
-          })}
-        </div>
-
-        <div className="flex items-center gap-2 justify-self-end">
-          <button
-            type="button"
-            onClick={loadExample}
-            className="rounded-[4px] border bg-transparent px-3 py-1.5 font-mono text-[10px] transition-all"
-            style={{
-              borderColor: theme.border,
-              color: theme.secondaryText,
-              backgroundColor: theme.panelSurface,
-            }}
+        left={
+          <Link
+            href="/"
+            className="font-mono text-[17px] font-bold transition-opacity hover:opacity-75"
+            style={{ color: theme.strongText, textDecoration: "none" }}
           >
-            cargar ejemplo
-          </button>
-          <ThemeSwitcher theme={themeMode} onToggle={toggleTheme} />
-        </div>
-      </header>
+            Diario<span style={{ color: theme.accent }}>48</span>
+            <span
+              style={{
+                color: theme.faintText,
+                margin: "0 8px",
+                fontSize: "14px",
+                fontWeight: 400,
+              }}
+            >
+              /
+            </span>
+            <span
+              style={{
+                color: theme.mutedText,
+                fontSize: "13px",
+                fontWeight: 400,
+              }}
+            >
+              visualizador de grafos
+            </span>
+          </Link>
+        }
+        center={
+          <div
+            className="flex items-stretch gap-1 border p-1"
+            style={{ borderColor: theme.border, backgroundColor: theme.panelSurface }}
+          >
+            {algorithmOptions.map((option) => {
+              const isActive = option.type === algorithm;
+
+              return (
+                <button
+                  key={option.id}
+                  type="button"
+                  onClick={() => option.available && option.type && setAlgorithm(option.type)}
+                  disabled={!option.available}
+                  className={`flex min-h-[44px] min-w-[58px] flex-col items-center justify-center rounded-[6px] border px-3 py-1.5 font-mono transition-all ${
+                    !option.available ? "cursor-not-allowed opacity-35" : ""
+                  }`}
+                  style={
+                    isActive
+                      ? {
+                          borderColor: theme.accent,
+                          backgroundColor: theme.accentSoft,
+                          color: theme.strongText,
+                        }
+                      : {
+                          borderColor: "transparent",
+                          color: theme.mutedText,
+                        }
+                  }
+                >
+                  <span className="text-[11px] leading-[1.05]">{option.label}</span>
+                  {option.secondaryLabel ? (
+                    <span
+                      className="mt-[2px] text-[9px] leading-[1.05]"
+                      style={{ color: isActive ? theme.secondaryText : theme.faintText }}
+                    >
+                      {option.secondaryLabel}
+                    </span>
+                  ) : null}
+                </button>
+              );
+            })}
+          </div>
+        }
+        right={
+          <div className="flex items-center gap-2">
+            <AuthStatusControls variant="tool" nextPath="/tools/graphs" />
+            {loadedGraphId ? (
+              <button
+                type="button"
+                onClick={() =>
+                  void navigator.clipboard.writeText(
+                    `${window.location.origin}/tools/graphs/${loadedGraphId}`,
+                  )
+                }
+                className="rounded-[4px] border bg-transparent px-3 py-1.5 font-mono text-[10px] transition-all"
+                style={{
+                  borderColor: theme.border,
+                  color: theme.secondaryText,
+                  backgroundColor: theme.panelSurface,
+                }}
+              >
+                copiar link
+              </button>
+            ) : null}
+            <button
+              type="button"
+              onClick={loadExample}
+              className="rounded-[4px] border bg-transparent px-3 py-1.5 font-mono text-[10px] transition-all"
+              style={{
+                borderColor: theme.border,
+                color: theme.secondaryText,
+                backgroundColor: theme.panelSurface,
+              }}
+            >
+              cargar ejemplo
+            </button>
+            <ThemeSwitcher theme={themeMode} onToggle={toggleTheme} />
+          </div>
+        }
+      />
 
       <section className="grid flex-1 grid-cols-[352px_1fr_320px] overflow-hidden">
         <GraphEditorPanel
           graph={graph}
           graphName={graphName}
           graphDescription={graphDescription}
+          visibility={visibility}
           nodeId={nodeId}
           nodeLabel={nodeLabel}
           nodeHeuristic={nodeHeuristic}
@@ -819,6 +878,7 @@ export default function GraphToolPage() {
           isLoadModalOpen={isLoadModalOpen}
           onGraphNameChange={setGraphName}
           onGraphDescriptionChange={setGraphDescription}
+          onVisibilityChange={setVisibility}
           onNodeIdChange={setNodeId}
           onNodeLabelChange={setNodeLabel}
           onNodeHeuristicChange={setNodeHeuristic}

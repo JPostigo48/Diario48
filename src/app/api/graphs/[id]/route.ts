@@ -1,15 +1,14 @@
 import mongoose from "mongoose";
 import { NextResponse } from "next/server";
+import { requireApiUser } from "@/lib/auth/api";
+import { ensureLegacyOwnershipMigration } from "@/lib/auth/ownership";
+import { getCurrentUser } from "@/lib/auth/session";
+import { getGraphAccessContext } from "@/lib/graph/access";
 import { connectToDatabase } from "@/lib/db/mongodb";
 import { validateGraphInput } from "@/lib/graph/utils";
 import GraphModel from "@/lib/models/Graph";
 
 export const dynamic = "force-dynamic";
-
-async function getGraphById(id: string) {
-  await connectToDatabase();
-  return GraphModel.findById(id).lean();
-}
 
 function invalidIdResponse() {
   return NextResponse.json({ error: "ID de grafo inválido." }, { status: 400 });
@@ -26,13 +25,24 @@ export async function GET(
   }
 
   try {
-    const graph = await getGraphById(id);
+    await ensureLegacyOwnershipMigration();
+    const currentUser = await getCurrentUser();
+    const graphAccess = await getGraphAccessContext(
+      id,
+      currentUser ? String(currentUser._id) : null,
+    );
 
-    if (!graph) {
+    if (!graphAccess) {
       return NextResponse.json({ error: "Grafo no encontrado." }, { status: 404 });
     }
 
-    return NextResponse.json({ data: graph });
+    return NextResponse.json({
+      data: graphAccess.graph,
+      meta: {
+        accessMode: graphAccess.accessMode,
+        visibility: graphAccess.graph.visibility,
+      },
+    });
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "No se pudo obtener el grafo.";
@@ -51,6 +61,14 @@ export async function PUT(
   }
 
   try {
+    await ensureLegacyOwnershipMigration();
+    const auth = await requireApiUser();
+
+    if (auth.response) {
+      return auth.response;
+    }
+
+    const ownerId = String(auth.user._id);
     const payload = await request.json();
     const validation = validateGraphInput(payload);
 
@@ -62,10 +80,14 @@ export async function PUT(
     }
 
     await connectToDatabase();
-    const updated = await GraphModel.findByIdAndUpdate(id, validation.data, {
-      new: true,
-      runValidators: true,
-    }).lean();
+    const updated = await GraphModel.findOneAndUpdate(
+      { _id: id, ownerId },
+      { ...validation.data, ownerId },
+      {
+        new: true,
+        runValidators: true,
+      },
+    ).lean();
 
     if (!updated) {
       return NextResponse.json({ error: "Grafo no encontrado." }, { status: 404 });
@@ -90,8 +112,16 @@ export async function DELETE(
   }
 
   try {
+    await ensureLegacyOwnershipMigration();
+    const auth = await requireApiUser();
+
+    if (auth.response) {
+      return auth.response;
+    }
+
+    const ownerId = String(auth.user._id);
     await connectToDatabase();
-    const deleted = await GraphModel.findByIdAndDelete(id).lean();
+    const deleted = await GraphModel.findOneAndDelete({ _id: id, ownerId }).lean();
 
     if (!deleted) {
       return NextResponse.json({ error: "Grafo no encontrado." }, { status: 404 });

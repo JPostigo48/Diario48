@@ -92,6 +92,12 @@ export default function SavedGraphsPanel({
               {graph.name}
             </div>
             <div
+              className="mt-1 font-mono text-[10px]"
+              style={{ color: theme.faintText }}
+            >
+              {graph.visibility === "link-readonly" ? "link-readonly" : "private"}
+            </div>
+            <div
               className="mt-1 line-clamp-2 font-sans text-[12px] leading-[1.5]"
               style={{ color: theme.secondaryText }}
             >

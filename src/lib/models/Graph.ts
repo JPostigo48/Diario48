@@ -24,9 +24,16 @@ const GraphEdgeSchema = new Schema(
 
 const GraphSchema = new Schema(
   {
+    ownerId: { type: String, required: true, index: true, trim: true },
     name: { type: String, required: true, trim: true },
     description: { type: String, default: "", trim: true },
     isPublic: { type: Boolean, default: true },
+    visibility: {
+      type: String,
+      enum: ["private", "link-readonly"],
+      default: "private",
+      trim: true,
+    },
     isDirected: { type: Boolean, default: false },
     nodes: { type: [GraphNodeSchema], required: true, default: [] },
     edges: { type: [GraphEdgeSchema], required: true, default: [] },
@@ -39,9 +46,11 @@ const GraphSchema = new Schema(
 );
 
 export interface GraphDocument extends mongoose.Document {
+  ownerId: string;
   name: string;
   description?: string;
   isPublic: boolean;
+  visibility: "private" | "link-readonly";
   isDirected: boolean;
   nodes: {
     id: string;

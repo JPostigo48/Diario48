@@ -3,7 +3,8 @@ import type { GraphData } from "./types";
 export const sampleGraph: GraphData = {
   name: "Grafo de ejemplo",
   description: "Grafo base para explorar BFS paso a paso en Diario48.",
-  isPublic: true,
+  isPublic: false,
+  visibility: "private",
   isDirected: false,
   startNode: "A",
   goalNode: "H",
