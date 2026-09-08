@@ -1,4 +1,5 @@
 import ThemeSwitcher from '@/components/ui/ThemeSwitcher';
+import AuthStatusControls from '@/components/auth/AuthStatusControls';
 
 type Panel = 'home' | 'projects' | 'university' | 'personal' | 'about' | 'tools';
 
@@ -40,7 +41,10 @@ export default function LandingNav({ activePanel, onNavigate, theme, onToggleThe
         ))}
       </div>
 
-      <ThemeSwitcher theme={theme} onToggle={onToggleTheme} />
+      <div className="flex items-center gap-3">
+        <AuthStatusControls variant="landing" />
+        <ThemeSwitcher theme={theme} onToggle={onToggleTheme} />
+      </div>
     </nav>
   );
 }
